@@ -19,14 +19,17 @@ from pirt.utils.gaussfun import diffuse
 # Import cython module
 if os.getenv('PIRT_USE_PYXIMPORT', False):
     # Compile on the fly (for use during development)
-    import os
-    os.environ['PATH'] += r';C:\pyzo2013c\MinGW\bin'
     import pyximport  # from Cython
-    from numpy import get_include
-    from distutils.sysconfig import get_python_inc
-    inc = [get_python_inc(), get_include()]
-    pyximport.install(setup_args={"script_args":["--compiler=mingw32", "-D MS_WIN64"],
+    if False:
+        # Attempt to get things working on Win64
+        import os
+        os.environ['PATH'] += r';C:\pyzo2013c\MinGW\bin'
+        from numpy import get_include
+        from distutils.sysconfig import get_python_inc
+        inc = [get_python_inc(), get_include()]
+        pyximport.install(setup_args={"script_args":["--compiler=mingw32", "-D MS_WIN64"],
                                 "include_dirs":inc },)
+    pyximport.install()
 from . import interpolation_
 
 # Import cython part

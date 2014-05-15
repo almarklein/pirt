@@ -1290,7 +1290,8 @@ def interp2_32(data, samplesx, samplesy, order, spline_type=0.0):
     cdef CoefLut lut
     cdef AccurateCoef coeffx, coeffy
     cdef double splineId = 0.0
-    cdef double *ccx, *ccy
+    cdef double *ccx
+    cdef double *ccy
     if order > 1:
         lut = CoefLut.get_lut(spline_type)
         splineId = lut.spline_type_to_id(spline_type)
@@ -1491,7 +1492,9 @@ def interp3_32(data, samplesx, samplesy, samplesz, order, spline_type=0.0):
     cdef CoefLut lut
     cdef AccurateCoef coeffx, coeffy, coeffz
     cdef double splineId = 0.0
-    cdef double *ccx, *ccy, *ccz
+    cdef double *ccx
+    cdef double *ccy
+    cdef double *ccz
     if order > 1:
         lut = CoefLut.get_lut(spline_type)
         splineId = lut.spline_type_to_id(spline_type)
@@ -2454,7 +2457,8 @@ def interp2_64(data, samplesx, samplesy, order, spline_type=0.0):
     cdef CoefLut lut
     cdef AccurateCoef coeffx, coeffy
     cdef double splineId = 0.0
-    cdef double *ccx, *ccy
+    cdef double *ccx 
+    cdef double *ccy
     if order > 1:
         lut = CoefLut.get_lut(spline_type)
         splineId = lut.spline_type_to_id(spline_type)
@@ -2655,7 +2659,9 @@ def interp3_64(data, samplesx, samplesy, samplesz, order, spline_type=0.0):
     cdef CoefLut lut
     cdef AccurateCoef coeffx, coeffy, coeffz
     cdef double splineId = 0.0
-    cdef double *ccx, *ccy, *ccz
+    cdef double *ccx
+    cdef double *ccy
+    cdef double *ccz
     if order > 1:
         lut = CoefLut.get_lut(spline_type)
         splineId = lut.spline_type_to_id(spline_type)
