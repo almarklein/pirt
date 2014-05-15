@@ -38,6 +38,7 @@ Build dependencies:
   * A working C compiler
 
 To install:
+
   * `pip install pirt`  (need Cython)
   * `conda install pirt -c pyzo` (probably Windows only)
 
