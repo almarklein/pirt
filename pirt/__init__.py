@@ -23,7 +23,11 @@ The registration algoriths are in `pirt.reg`.
 
 from __future__ import absolute_import, print_function, division 
 
-# Import ssdf and pypoints
+
+# Set version number
+__version__ = '2.0'
+
+
 from pirt.utils import Point, Pointset, Aarray
 
 from pirt.utils.gaussfun import (gaussiankernel, gfilter, gfilter2,

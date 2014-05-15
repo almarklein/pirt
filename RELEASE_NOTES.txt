@@ -1,0 +1,19 @@
+
+## Future work
+
+I think there is some pretty nice code in here, but it needs work to
+make it available for a wide audiance. Help is appreciated!
+
+
+
+## Version 2.0
+
+Made code compatible with Python 3. Refactoring in a real package that
+can be distributed. Also cleaning up, and moving towards independence
+from visvis.
+
+
+## Version 1.0
+
+Pirt started out as research code. There were no releases. There was
+no version number. Let's call this 1.0.
