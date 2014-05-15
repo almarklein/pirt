@@ -4,10 +4,14 @@
 
 import os
 from distutils.core import setup
+from distutils.extension import Extension
+
+
+USE_CYTHON = True
+ext = '.pyx' if USE_CYTHON else '.c'
 
 name = 'pirt'
 description = 'Python Image Registration Toolkit'
-
 
 # Get version and docstring
 __version__ = None
@@ -25,6 +29,16 @@ for line in open(initFile).readlines():
             docStatus = 2
     if docStatus == 1:
         __doc__ += line
+
+# Define extensions
+extensions = [Extension("pirt.interp.interpolation_", ["pirt/interp/interpolation_"+ext]),
+              Extension("pirt.splinegrid_", ["pirt/splinegrid_"+ext]),
+             ]
+
+# Compile with Cython
+if USE_CYTHON:
+    from Cython.Build import cythonize
+    extensions = cythonize(extensions)
 
 
 setup(
@@ -51,7 +65,12 @@ setup(
                 'pirt.apps',
                ],
     package_dir = {'pirt': 'pirt'},
-    #package_data = {'stentseg': ['data/*']},
+    
+    ext_modules = extensions,
+    
+    package_data = {'pirt': ['*.pyx', '*.pxd', '*.c'],
+                    'pirt.interp': ['*.pyx', '*.pxd', '*.c']
+                   },
     zip_safe = False,
     
     classifiers=[

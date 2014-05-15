@@ -4,5 +4,7 @@ syntax: glob
 *.so
 *.pyd
 *.orig
+*.c
 build/*
 dist/*
+MANIFEST
