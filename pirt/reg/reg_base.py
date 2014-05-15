@@ -1312,7 +1312,7 @@ class GDGRegistration(BaseRegistration):
             testGrid = pirt.SplineGrid(self._ims[0], grid_sampling)
             # Check
             if all( [s<4 for s in testGrid.grid_shape] ):
-                print 'skip because grid too small'
+                print('skip because grid too small')
                 return None
         
         # Get wise

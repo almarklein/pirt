@@ -620,7 +620,7 @@ class Elastix(object):
             # Try and load result
             try:
                 a = self._read_image_data('result.0.mhd')
-            except IOError, why:
+            except IOError as why:
                 tmp = "An error occured during registration: " + str(why)
                 raise RuntimeError(tmp)
         
@@ -638,7 +638,7 @@ class Elastix(object):
             # Try and load result
             try:
                 b = self._read_image_data('deformationField.mhd')
-            except IOError, why:
+            except IOError as why:
                 tmp = "An error occured during transformation: " + str(why)
                 raise RuntimeError(tmp)
         
