@@ -18,7 +18,8 @@ import pirt
 from pirt import Point, Pointset, Aarray
 
 # Import cython module
-if os.getenv('PIRT_USE_PYXIMPORT', False):
+use_import = os.getenv('PIRT_USE_PYXIMPORT', False)
+if use_import and use_import in ('1', 'True', 'true', 'yes'):
     # Compile on the fly (for use during development)
     import pyximport  # from Cython
     pyximport.install()
