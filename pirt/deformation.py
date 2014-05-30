@@ -17,7 +17,7 @@ import numpy as np
 import visvis as vv
 
 import pirt
-from pirt import Point, Pointset, Aarray
+from pirt.utils import Point, Pointset, Aarray
 from pirt import interp
 from pirt.splinegrid import GridInterface, SplineGrid, FD
 
@@ -1321,7 +1321,7 @@ class DeformationField(Deformation):
         # Interpolate (upscale/downscale the other)
         fields = []
         for field1 in self:
-            field2 = pirt.resize(field1, fd.shape, 3, 'C', prefilter=False, extra=False)
+            field2 = pirt.interp.resize(field1, fd.shape, 3, 'C', prefilter=False, extra=False)
             fields.append( field2 )
         
         # Verify

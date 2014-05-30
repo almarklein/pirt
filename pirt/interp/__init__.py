@@ -14,7 +14,7 @@ import os
 
 # Need some stuff from pirt utils. These can easily be transfered if necessary
 from pirt.utils import Point, Aarray
-from pirt.utils.gaussfun import diffuse
+from pirt.gaussfun import diffuse
 
 # Import cython module
 if os.getenv('PIRT_USE_PYXIMPORT', False):

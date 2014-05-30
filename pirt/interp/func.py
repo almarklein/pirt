@@ -278,9 +278,9 @@ def imzoom(data, factor, order=3):
     Convenience function to resize the image data (1D, 2D or 3D) with the
     specified factor.
     
-    This function uses pirt.resize() with 'prefilter' and 'extra' set to True.
-    This makes it more suitble for generic image resizing. Use pirt.resize()
-    for more fine-grained control.
+    This function uses pirt.interp.resize() with 'prefilter' and 'extra'
+    set to True. This makes it more suitble for generic image resizing.
+    Use pirt.resize() for more fine-grained control.
     
     Parameters
     ----------

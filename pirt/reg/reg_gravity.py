@@ -10,15 +10,15 @@ import scipy.ndimage
 import pirt
 from pirt import ( DeformationGridForward, DeformationFieldForward,
                     DeformationGridBackward, DeformationFieldBackward)
-from pirt import Point, Pointset, Aarray
-from reg_base import GDGRegistration, create_grid_image
+from pirt.utils import Point, Pointset, Aarray
+from .reg_base import GDGRegistration, create_grid_image
 
 
     
 class GravityRegistration(GDGRegistration):
     """ GravityRegistration(*images)
     
-    A registration algorithm based on extraction between masses in both 
+    A registration algorithm based on attraction between masses in both 
     images, which is robust for large differences between the images.
     
     The most important parameters to tune the algorithm with are 

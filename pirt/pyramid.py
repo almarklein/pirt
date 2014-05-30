@@ -1,6 +1,10 @@
 from __future__ import absolute_import, print_function, division 
 
+import numpy as np
+import pirt
+
 from .gaussfun import diffuse2
+from visvis import Aarray
 
 
 class BasePyramid:
@@ -64,19 +68,9 @@ class ScaleSpacePyramid:
     def __init__(self, data, min_scale=None, scale_offset=0, 
                 use_buffer=False, level_factor=2):
         
-        # Try to import pirt
-        try:
-            import pirt
-        except ImportError:
-            pirt = None
-        if not pirt:
-            raise RuntimeError('ScaleSpacePyramid requires pirt package.')
-        
         # Make sure data is an anisotropic array
-        if not pypoints:
-            raise RuntimeError('ScaleSpacePyramid requires pypoints module.')
-        if not pypoints.is_Aarray(data):
-            data = pypoints.Aarray(data)
+        if not hasattr(data, 'sampling'):
+            data = Aarray(data)
         
         # Check scale_offset
         scale_offset = float(scale_offset)
@@ -136,7 +130,7 @@ class ScaleSpacePyramid:
             zoom_factors = [min(1, 1.0/s) for s in pixel_scales]
             # Only resample if one dim can be reduced by more than 10%
             if min(zoom_factors) < 0.9:
-                data = pirt.zoom(data, zoom_factors, order=3, prefilter=False)
+                data = pirt.interp.zoom(data, zoom_factors, order=3, prefilter=False)
         
         # Set properties
         data._pyramid_scale = min_scale
@@ -293,7 +287,7 @@ class ScaleSpacePyramid:
         # lose the last pixel if the shape is even!)
         if min(data.shape) > 8:
             factor = 1.0/self._level_factor
-            data = pirt.zoom(data, factor, order=3, prefilter=False)
+            data = pirt.interp.zoom(data, factor, order=3, prefilter=False)
         
         # Insert in levels
         data._pyramid_scale = sigma2

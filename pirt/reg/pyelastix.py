@@ -90,7 +90,7 @@ from __future__ import absolute_import, print_function, division
 
 import os, sys, time
 import platform, ctypes
-import thread
+import threading
 import subprocess
 import re
 import numpy as np
@@ -333,7 +333,10 @@ def system3(cmd, verbose=False):
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     
     # Keep reading stdout from it
-    thread.start_new_thread(poll_process, (p,))
+    # thread.start_new_thread(poll_process, (p,))  Python 2.x
+    my_thread = threading.Thread(target=poll_process, args=(p,))
+    my_thread.setDaemon(True)
+    my_thread.start()
     
     # Wait here
     try:
