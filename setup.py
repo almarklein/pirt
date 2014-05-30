@@ -5,6 +5,7 @@
 import os
 from distutils.core import setup
 from distutils.extension import Extension
+from numpy.distutils.misc_util import get_numpy_include_dirs
 
 
 USE_CYTHON = True
@@ -31,8 +32,15 @@ for line in open(initFile).readlines():
         __doc__ += line
 
 # Define extensions
-extensions = [Extension("pirt.interp.interpolation_", ["pirt/interp/interpolation_"+ext]),
-              Extension("pirt.splinegrid_", ["pirt/splinegrid_"+ext]),
+extensions = [
+                Extension("pirt.interp.interpolation_", 
+                    sources=["pirt/interp/interpolation_"+ext],
+                    include_dirs=get_numpy_include_dirs()
+                    ),
+                Extension("pirt.splinegrid_", 
+                    sources=["pirt/splinegrid_"+ext],
+                    include_dirs=get_numpy_include_dirs()
+                    ),
              ]
 
 # Compile with Cython
