@@ -16,7 +16,7 @@ import os, sys, time
 import hashlib
 
 import numpy as np
-from pirt import ssdf
+from pirt.utils import ssdf
 
 
 class Database:

@@ -10,8 +10,8 @@ import scipy.ndimage
 import pirt
 from pirt import ( DeformationGridForward, DeformationFieldForward,
                     DeformationGridBackward, DeformationFieldBackward)
-from pirt import Point, Pointset, Aarray
-from reg_base import GDGRegistration, BaseRegistration, create_grid_image
+from pirt.utils import Point, Pointset, Aarray
+from .reg_base import GDGRegistration, BaseRegistration, create_grid_image
 
 
 class BaseDemonsRegistration(object):

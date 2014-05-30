@@ -12,7 +12,7 @@ Gravity).
 Image registration itself requires several image processing techniques
 and data types, which are also included in this package:
 
-  * pirt.utils.gaussfun - function for Gaussian smoothing and
+  * pirt.gaussfun - function for Gaussian smoothing and
     derivatives, image pyramid class
   * pirt.interp - interpolation of 1D, 2D and 3D data (nearest, linear,
     and various spline interpolants)

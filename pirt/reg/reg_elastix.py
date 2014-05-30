@@ -7,9 +7,10 @@ import os, sys, time
 
 import numpy as np
 
-from reg_base import AbstractRegistration
-from pirt import ssdf, gfilter, DeformationFieldBackward
-from pyelastix import Elastix
+from .reg_base import AbstractRegistration
+from pirt.utils import ssdf 
+from pirt import gfilter, DeformationFieldBackward
+from .pyelastix import Elastix
 
 
 class ElastixRegistration(AbstractRegistration):

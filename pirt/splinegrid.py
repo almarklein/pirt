@@ -15,7 +15,7 @@ import os, sys, time
 import numpy as np
 
 import pirt
-from pirt import Point, Pointset, Aarray
+from pirt.utils import Point, Pointset, Aarray
 
 # Import cython module
 use_import = os.getenv('PIRT_USE_PYXIMPORT', False)

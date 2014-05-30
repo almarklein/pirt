@@ -4,7 +4,7 @@ import pirt
 from pirt import SplineGrid, FieldDescription
 from pirt import ( DeformationGridForward, DeformationFieldForward,
                     DeformationGridBackward, DeformationFieldBackward)
-from pirt import Point, Pointset, Aarray
+from pirt.utils import Point, Pointset, Aarray
 from pirt import interp
 
 try:

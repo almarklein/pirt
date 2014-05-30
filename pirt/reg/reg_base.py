@@ -7,9 +7,9 @@ from __future__ import absolute_import, print_function, division
 import time
 import numpy as np
 import pirt
-from pirt import ssdf, Aarray, Deformation
-from pirt import ( DeformationGridForward, DeformationFieldForward,
-                    DeformationGridBackward, DeformationFieldBackward)
+from pirt.utils import ssdf, Aarray
+from pirt import (Deformation, DeformationGridForward, DeformationFieldForward,
+                  DeformationGridBackward, DeformationFieldBackward)
 
 
 class classproperty(property):
