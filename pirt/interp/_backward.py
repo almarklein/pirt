@@ -5,7 +5,7 @@ import numba
 from numba import cuda
 
 from ._cubic import spline_type_to_id, set_cubic_spline_coefs
-from ._cubic import cubicsplinecoef_catmullRom, cubicsplinecoef_cardinal
+from ._cubic import cubicsplinecoef_catmullRom, cubicsplinecoef_cardinal, cubicsplinecoef_quadratic
 
 @numba.jit(nopython=True, nogil=True)
 def floor(i):
@@ -29,8 +29,8 @@ def warp(data, samples, order=1, spline_type=0.0):
         Each array specifies the sample position for one dimension (in 
         x-y-z order). 
     order : integer or string
-        Order of interpolation. Can be 0:'nearest', 1:'linear', 
-        2:'quasi-linear', 3:'cubic'. 
+        Order of interpolation. Can be 0:'nearest', 1:'linear', 2: 'quadratic',
+        3:'cubic'. 
     spline_type : float or string
         Only for cubic interpolation. Specifies the type of spline.
         Can be 'Basis', 'Hermite', 'Cardinal', 'Catmull-rom', 'Lagrange', 
@@ -53,19 +53,14 @@ def warp(data, samples, order=1, spline_type=0.0):
     
     An order of interpolation of 2 would naturally correspond to
     quadratic interpolation. However, due to its uneven coefficients
-    it reques the same support (and speed) as a cubic interpolant, 
-    while producing less satisfactory results in general. 
-    
-    Quasi-linear corresponds to a cardinal spine with tension 1, which is 
-    calculated using cubic polynomials, but has the support of linear 
-    interpolation (in other words: it uses only two coefficients). 
-    It produces results wich are C2 continouos and look smoother than linear
-    interpolation, at only a slight decrease of speed.
+    it reques the same support (and speed) as a cubic interpolant.
+    This implementation adds the two quadratic polynomials. Note that
+    you can probably better use order=3 with a Catmull-Rom spline, which
+    corresponds to the linear interpolation of the two quadratic polynomials.
     
     It can be shown (see Thevenaz et al. 2000 "Interpolation Revisited") 
     that interpolation using a Cardinal spline is equivalent to 
     interpolating-B-spline interpolation.
-    
     """
     
     # Check data
@@ -100,7 +95,7 @@ def warp(data, samples, order=1, spline_type=0.0):
             raise ValueError("sample arrays must be of type float32.")
     
     # Check order
-    orders = {'nearest':0, 'linear':1, 'quasi-linear':2, 'cubic':3}
+    orders = {'nearest': 0, 'linear': 1, 'quadratic': 2, 'cubic': 3}
     if isinstance(order, str):
         try:
             order = orders[order]
@@ -108,6 +103,9 @@ def warp(data, samples, order=1, spline_type=0.0):
             raise ValueError('Unknown order of interpolation.')
     if order not in [0, 1, 2, 3]:
         raise ValueError('Invalid order of interpolation.')
+    if order == 2:
+        order = 3
+        spline_type = 'quadratic'
     
     # Prepare spline_id and empty result array
     spline_id = spline_type_to_id(spline_type)
@@ -184,6 +182,8 @@ def warp1(data_, result_, samplesx_, order, spline_id):
                 # Get coefficients.
                 if spline_id <= 1.0:  # By far most common, make it fast!
                     cubicsplinecoef_cardinal(tx, ccx, spline_id)  # tension=spline_id
+                elif spline_id == 99.0:
+                    cubicsplinecoef_quadratic(tx, ccx)
                 else:  # Select spline type, slower, but ok, because these make less sense, or are slow anyway
                     set_cubic_spline_coefs(tx, spline_id, ccx)
                 
@@ -217,32 +217,6 @@ def warp1(data_, result_, samplesx_, order, spline_id):
                     val += data_[ix+cx-1] * ccx[cx]
                 result_[i] = val
                 
-            else:
-                # Out of range
-                result_[i] = 0.0
-    
-    elif order == 2:
-        
-        # Iterate over all samples
-        for i in range(0, Ni):
-            
-            # Get integer sample location and t-factor
-            dx = samplesx_[i]; ix = floor(dx); tx = dx-ix
-            
-            if ix >= 0 and ix < Nx-1:
-                # Quasi-linear interpolation
-                tx_ = -2*tx**3 + 3*tx**2
-                val =  data_[ix] * (1.0-tx_)
-                val += data_[ix+1] * tx_
-                result_[i] = val
-            elif dx>=-0.5 and dx<=Nx-0.5:                
-                if ix<0: tx+=ix; ix=0; 
-                if ix>Nx-2: tx+=ix-(Nx-2); ix=Nx-2; 
-                # Quasi-linear interpolation (edges)
-                tx_ = -2*tx**3 + 3*tx**2
-                val =  data_[ix] * (1.0-tx_)
-                val += data_[ix+1] * tx_
-                result_[i] = val
             else:
                 # Out of range
                 result_[i] = 0.0
@@ -314,6 +288,9 @@ def warp2(data_, result_, samplesx_, samplesy_, order, spline_id):
                 if spline_id <= 1.0:  # By far most common, make it fast!
                     cubicsplinecoef_cardinal(tx, ccx, spline_id)  # tension=spline_id
                     cubicsplinecoef_cardinal(ty, ccy, spline_id)
+                elif spline_id == 99.0:
+                    cubicsplinecoef_quadratic(tx, ccx)
+                    cubicsplinecoef_quadratic(ty, ccy)
                 else:  # Select spline type, slower, but ok, because these make less sense, or are slow anyway
                     set_cubic_spline_coefs(tx, spline_id, ccx)
                     set_cubic_spline_coefs(ty, spline_id, ccy)
@@ -362,45 +339,6 @@ def warp2(data_, result_, samplesx_, samplesy_, order, spline_id):
                         val += data_[iy+cy-1,ix+cx-1] * ccy[cy] * ccx[cx]
                 result_[i] = val
             
-            else:
-                # Out of range
-                result_[i] = 0.0
-    
-    elif order == 2:
-        
-        # Iterate over all samples
-        for i in range(0, Ni):
-            
-            # Get integer sample location and t-factor
-            dx = samplesx_[i]; ix = floor(dx); tx = dx-ix
-            dy = samplesy_[i]; iy = floor(dy); ty = dy-iy
-            
-            if (    ix >= 0 and ix < Nx-1 and
-                    iy >= 0 and iy < Ny-1     ):
-                # Quasi-linear interpolation
-                tx_ = -2*tx**3 + 3*tx**2
-                ty_ = -2*ty**3 + 3*ty**2
-                val =  data_[iy,  ix  ] * (1.0-ty_) * (1.0-tx_)
-                val += data_[iy,  ix+1] * (1.0-ty_) *      tx_
-                val += data_[iy+1,ix  ] *      ty_  * (1.0-tx_)
-                val += data_[iy+1,ix+1] *      ty_  *      tx_
-                result_[i] = val
-            elif (  dx>=-0.5 and dx<=Nx-0.5 and 
-                    dy>=-0.5 and dy<=Ny-0.5     ):
-                # Edge effects
-                if ix<0: tx+=ix; ix=0; 
-                if ix>Nx-2: tx+=ix-(Nx-2); ix=Nx-2; 
-                #
-                if iy<0: ty+=iy; iy=0; 
-                if iy>Ny-2: ty+=iy-(Ny-2); iy=Ny-2; 
-                # Quasi-linear interpolation (edges)
-                tx_ = -2*tx**3 + 3*tx**2
-                ty_ = -2*ty**3 + 3*ty**2
-                val =  data_[iy,  ix  ] * (1.0-ty_) * (1.0-tx_)
-                val += data_[iy,  ix+1] * (1.0-ty_) *      tx_
-                val += data_[iy+1,ix  ] *      ty_  * (1.0-tx_)
-                val += data_[iy+1,ix+1] *      ty_  *      tx_
-                result_[i] = val
             else:
                 # Out of range
                 result_[i] = 0.0
@@ -534,47 +472,6 @@ def warp2_cuda(data_, result_, samplesx_, samplesy_, order, lutn, lut):
                         val += data_[iy+cy-1,ix+cx-1] * coefsy[cy] * coefsx[cx]
                 result_[i] = val
             
-            else:
-                # Out of range
-                result_[i] = 0.0
-    
-    elif order == 2:
-        
-        # Iterate over all samples
-        #for i in range(0, Ni):
-        i = cuda.grid(1)
-        if i < Ni:
-            
-            # Get integer sample location and t-factor
-            dx = samplesx_[i]; ix = floor(dx); tx = dx-ix
-            dy = samplesy_[i]; iy = floor(dy); ty = dy-iy
-            
-            if (    ix >= 0 and ix < Nx-1 and
-                    iy >= 0 and iy < Ny-1     ):
-                # Quasi-linear interpolation
-                tx_ = -2*tx**3 + 3*tx**2
-                ty_ = -2*ty**3 + 3*ty**2
-                val =  data_[iy,  ix  ] * (1.0-ty_) * (1.0-tx_)
-                val += data_[iy,  ix+1] * (1.0-ty_) *      tx_
-                val += data_[iy+1,ix  ] *      ty_  * (1.0-tx_)
-                val += data_[iy+1,ix+1] *      ty_  *      tx_
-                result_[i] = val
-            elif (  dx>=-0.5 and dx<=Nx-0.5 and 
-                    dy>=-0.5 and dy<=Ny-0.5     ):
-                # Edge effects
-                if ix<0: tx+=ix; ix=0; 
-                if ix>Nx-2: tx+=ix-(Nx-2); ix=Nx-2; 
-                #
-                if iy<0: ty+=iy; iy=0; 
-                if iy>Ny-2: ty+=iy-(Ny-2); iy=Ny-2; 
-                # Quasi-linear interpolation (edges)
-                tx_ = -2*tx**3 + 3*tx**2
-                ty_ = -2*ty**3 + 3*ty**2
-                val =  data_[iy,  ix  ] * (1.0-ty_) * (1.0-tx_)
-                val += data_[iy,  ix+1] * (1.0-ty_) *      tx_
-                val += data_[iy+1,ix  ] *      ty_  * (1.0-tx_)
-                val += data_[iy+1,ix+1] *      ty_  *      tx_
-                result_[i] = val
             else:
                 # Out of range
                 result_[i] = 0.0
