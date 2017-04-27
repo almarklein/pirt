@@ -69,9 +69,7 @@ def warp(data, samples, order=1, spline_type=0.0):
         raise ValueError('data must be a numpy array.')
     elif data.ndim > 3:
         raise ValueError('can not interpolate data with such many dimensions.')
-    elif data.dtype not in [np.float32, np.float64, np.int16]:
-        raise ValueError('data must be float32 or float64.')
-        # todo: this dtype requirement is not strictly necessary anymore
+    # With Numba we can allow any dtype!
     
     # todo: I think we can support skimage-like samples out of the box
     
@@ -92,8 +90,7 @@ def warp(data, samples, order=1, spline_type=0.0):
             raise ValueError("values in samples must all be numpy arrays.")
         if s.shape != samples[0].shape:
             raise ValueError("sample arrays must all have the same shape.")
-        if s.dtype != np.float32:
-            raise ValueError("sample arrays must be of type float32.")
+        # With Numba we can allow any dtype for the samples!
     
     # Check order
     orders = {'nearest': 0, 'linear': 1, 'quadratic': 2, 'cubic': 3}
@@ -110,7 +107,7 @@ def warp(data, samples, order=1, spline_type=0.0):
     
     # Prepare spline_id and empty result array
     spline_id = spline_type_to_id(spline_type)
-    result = np.empty(samples[0].shape, data.dtype)
+    result = np.empty(samples[0].shape, data.dtype)  # shape of samples, dtype of data
     
     # Some code snippets to do it on Cuda, would need to be incorporated to make it work
     gpu = False
