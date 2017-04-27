@@ -10,9 +10,7 @@ and maybe the effect is negligable for linear/quasi linear.
 
 """
 
-# todo: all backward funcs
 # todo: all forward funcs
-# todo: fast version of CM spline?
 # todo: slice in volume
 # todo: splinegrid cython
 # todo: check other todos
@@ -85,7 +83,8 @@ if pirt and hasattr(pirt.interp, 'interp'):
     im3 = timeit('old pirt', pirt.interp.interp, im1, coords2, order=order)
 
 if sys.version_info > (3, 5):
-    im4 = timeit('new pirt warp', pirt.interp.warp, im1, coords2, order)
+    #im4 = timeit('new pirt warp/project', pirt.interp.warp, im1, coords2, order)
+    im4 = timeit('new pirt warp/project', pirt.interp.project, im1, coords2)
 
 
 vv.figure(1); vv.clf()

@@ -26,7 +26,7 @@ def warp(data, samples, order=1, spline_type=0.0):
     ----------
     data : array (float32 or float64)
         Data to interpolate, can be 1D, 2D or 3D.
-    sample : tuple with numpy arrays
+    samples : tuple with numpy arrays
         Each array specifies the sample position for one dimension (in 
         x-y-z order). 
     order : integer or string
@@ -42,15 +42,15 @@ def warp(data, samples, order=1, spline_type=0.0):
     Returns
     -------
     result : array 
-        The result is of the same shape of the samples arrays, which 
-        can be of any shape. This flexibility makes this function suitable
-        as a base function used by many of the other high-level functions
-        defined in this module.
+        The result is of the same type as the data array, and of the
+        same shape of the samples arrays, which can be of any shape.
+        This flexibility makes this function suitable as a base function
+        for higher level "sampling functions".
     
     Notes
     -----------
-    The input data should be of float32 or float64 and can have up to 
-    three dimensions.
+    The input data can have up to three dimensions. It can be of any dtype,
+    but float32 or float64 is recommended in general.
     
     An order of interpolation of 2 would naturally correspond to
     quadratic interpolation. However, due to its uneven coefficients
