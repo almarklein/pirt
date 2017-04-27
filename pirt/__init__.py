@@ -33,7 +33,10 @@ from .gaussfun import (gaussiankernel, gfilter, gfilter2,
                        diffusionkernel, diffuse, diffuse2)
 from .pyramid import ScaleSpacePyramid
 
-from . import interp
+from .interp import (get_cubic_spline_coefs, meshgrid,
+                     warp, project, awarp, aproject,
+                     deform_backward, deform_forward,
+                     resize, imresize, zoom, imzoom)
 
 from pirt.splinegrid import SplineGrid, GridContainer, FieldDescription, FD
 from pirt.deformation import (Deformation, DeformationIdentity, 

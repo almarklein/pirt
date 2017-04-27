@@ -17,13 +17,7 @@ import numpy as np
 import pirt
 from pirt.utils import Point, Pointset, Aarray
 
-# Import cython module
-use_import = os.getenv('PIRT_USE_PYXIMPORT', False)
-if use_import and use_import in ('1', 'True', 'true', 'yes'):
-    # Compile on the fly (for use during development)
-    import pyximport  # from Cython
-    pyximport.install()
-from . import splinegrid_
+# todo: from . import splinegrid_  --> numba-ify
 
 
 ## Helper classes and functions

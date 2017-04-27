@@ -23,7 +23,7 @@ from pirt.splinegrid import GridInterface, SplineGrid, FD
 
 # Import Cython part
 from . import splinegrid
-from . import splinegrid_
+# todo: from . import splinegrid_
 
 
 # todo: cython templates (maybe already exists?
@@ -325,7 +325,7 @@ class Deformation(object):
                 field1 = def1[d]
                 field2 = def2[d]
                 # linear or cubic. linear faster and I've not seen cubic doing better
-                field = pirt.interp.interp(field2, sampleLocations, 'linear')
+                field = pirt.interp.warp(field2, sampleLocations, 'linear')
                 field = pirt.Aarray(field1+field, def1.field_sampling)
                 fields.append(field)
         else:

@@ -5,10 +5,6 @@ import numpy as np
 
 from . import Point, Aarray
 
-from .interpolation_ import interp, project, ainterp, aproject
-from .interpolation_ import make_samples_absolute, fix_samples_edges
-from .interpolation_ import get_cubic_spline_coefs, meshgrid
-
 
 def get_span_vectors(normal, c, d):
     """ get_span_vectors(normal, prevA, prevB) -> (a,b)

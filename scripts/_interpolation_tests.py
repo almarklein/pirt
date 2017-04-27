@@ -55,9 +55,8 @@ for i in range(len(tt)):
 
 # Interpolate
 samples = np.arange(0,len(data)-1,0.05, dtype=np.float32) 
-values1 = pirt.interp(np.array(data, dtype=np.float32), samples, 3, 0 )
-values2 = pirt.interp(np.array(data, dtype=np.float32), samples, 3,'linear')
-values3 = pirt.interp(np.array(data, dtype=np.float32), samples, 3,'b')
+values1 = pirt.warp(np.array(data, dtype=np.float32), samples, 3, 0 )
+values2 = pirt.warp(np.array(data, dtype=np.float32), samples, 3,'linear')
 
 # Visualize
 fig = vv.figure(1); vv.clf()
@@ -128,20 +127,20 @@ a0 = np.sin(t0)+1
 
 # Create decimated version
 factor = 50
-a1 = pirt.zoom(a0, 1.0/factor, 3, prefilter=0)
+a1 = pirt.interp.zoom(a0, 1.0/factor, 3, prefilter=0)
 t1 = np.arange(a1.origin[0], a1.origin[0] + a1.sampling[0]* a1.shape[0], a1.sampling[0])
 
 # Create increased resolution
 factor = 2
-a2 = pirt.zoom(a1, factor, 1, 0, extra=0)
-a3 = pirt.zoom(a1, factor, 3, 'C', extra=0)
+a2 = pirt.interp.zoom(a1, factor, 1, 0, extra=0)
+a3 = pirt.interp.zoom(a1, factor, 3, 'C', extra=0)
 
 t2 = np.arange(a2.origin[0], a2.origin[0] + a2.sampling[0]* a2.shape[0], a2.sampling[0])
 t3 = np.arange(a3.origin[0], a3.origin[0] + a3.sampling[0]* a3.shape[0], a3.sampling[0])
 
 # Create increased resolution and beyond
 t9 = np.linspace(-2, a1.shape[0]+1, 100).astype('float32')
-a9 = pirt.interp(a1, (t9,), 3) 
+a9 = pirt.interp.warp(a1, (t9,), 3) 
 
 # Visualize
 fig = vv.figure(2); vv.clf()
@@ -340,7 +339,7 @@ for t in np.arange(0,1,0.01):
     res3.append(t, c_1*pp[0] + c0*pp[1] + c1*pp[2] + c2*pp[3])
 
 # Combine by adding
-res3 = 0.5*(res1 + res2)
+# res3 = 0.5*(res1 + res2)
 
 # To compare, cardinal spline
 resC = Pointset(2)

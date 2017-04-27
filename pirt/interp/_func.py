@@ -5,9 +5,10 @@ import numpy as np
 
 from . import Aarray, diffuse
 
-from .interpolation_ import interp, project, ainterp, aproject
-from .interpolation_ import make_samples_absolute, fix_samples_edges
-from .interpolation_ import get_cubic_spline_coefs, meshgrid
+from ._cubiclut import get_cubic_spline_coefs, get_lut, get_coef, get_coef_linear
+from ._backward import warp, awarp
+from ._forward import project, aproject
+from ._misc import make_samples_absolute, meshgrid, uglyRoot
 
 
 ## Deformations
@@ -18,7 +19,7 @@ def deform_backward(data, deltas, order=1, spline_type=0.0):
     
     Interpolate data according to the deformations specified in deltas.
     Deltas should be a tuple of numpy arrays similar to 'samples' in
-    the interp() function. They represent the relative sample positions 
+    the warp() function. They represent the relative sample positions 
     expressed in world coordinates.
     
     """
@@ -32,7 +33,7 @@ def deform_backward(data, deltas, order=1, spline_type=0.0):
     samples = make_samples_absolute(deltas)
     
     # Interpolate
-    result = interp(data, samples, order, spline_type)
+    result = warp(data, samples, order, spline_type)
     
     # Make Aarray
     # todo: is this necessary? can the Aarray not do this itself?
@@ -183,7 +184,7 @@ def resize(data, new_shape, order=3, spline_type=0.0, prefilter=False, extra=Fal
     # Interpolate (first make ranges x-y-z)
     ranges.reverse()
     grids = meshgrid(ranges)
-    data2 = interp(data, grids, order, spline_type)
+    data2 = warp(data, grids, order, spline_type)
     
     # Make Aarray
     return Aarray(data2, sampling2, origin2)
