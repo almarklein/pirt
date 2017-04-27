@@ -1,5 +1,5 @@
 """
-Lookup tables for cubic spline coefficients.
+Cubic spline coefficients and lookup tables.
 """
 
 import numpy as np
@@ -65,13 +65,23 @@ def get_cubic_spline_coefs(t, spline_type=0.0):
     
     """
     spline_id = spline_type_to_id(spline_type)
-    
     out = np.zeros((4, ), np.float64)
+    set_cubic_spline_coefs(t, spline_id, out)
+    return out
+
+
+@numba.jit(nopython=True)
+def set_cubic_spline_coefs(t, spline_id, out):
+    """ set_cubic_spline_coefs(t, spline_id, out)
     
-    if spline_id == 0.0:
-        cubicsplinecoef_catmullRom(t, out)
-    elif spline_id <= 1.0:
-        cubicsplinecoef_cardinal(t, out, spline_id) # tension=spline_id
+    Calculate cubuc spline coefficients for the given spline_id, and
+    store them in the given array. See get_cubic_spline_coefs() and
+    spline_type_to_id() for details.
+    """
+    #if spline_id == 0.0:
+    #    cubicsplinecoef_catmullRom(t, out)  == cubicsplinecoef_cardinal(t, out, 0)
+    if spline_id <= 1.0:
+        cubicsplinecoef_cardinal(t, out, spline_id)  # tension=spline_id
     elif spline_id == 2.0:
         cubicsplinecoef_basis(t, out)
     elif spline_id == 3.0:
@@ -79,18 +89,20 @@ def get_cubic_spline_coefs(t, spline_type=0.0):
     elif spline_id == 4.0:
         cubicsplinecoef_lagrange(t, out)
     elif spline_id == 5.0:
-        cubicsplinecoef_lanczos(t, out)
+        cubicsplinecoef_lanczos(t, out)  # common in Audio, but slow because of sine
     elif spline_id == 97.0:
         cubicsplinecoef_nearest(t, out)
     elif spline_id == 98.0:
         cubicsplinecoef_linear(t, out)
     elif spline_id == 99.0:
         cubicsplinecoef_quadratic(t, out)
-    
-    return out
 
 
-
+# Note: the lookup table was initially implemented to provide efficient
+# calculation of the coefficient in the warp functions. However, with Numba
+# it turned out to be more efficient to calculate the coefficients directly,
+# possibly by LLVM making use of SIMD and/or the overhead of array management
+# needed with a LUT.
 def get_lut(spline_type, n=32768):
     """ get_lut(spline_type, n=32768)
     
@@ -105,20 +117,20 @@ def get_lut(spline_type, n=32768):
     interpolation with a cubic kernel.
     """
     
-    splineId = spline_type_to_id(spline_type)
+    spline_id = spline_type_to_id(spline_type)
     
     # Create lut if not existing yet
-    key = splineId, n
+    key = spline_id, n
     if key not in LUTS.keys():
         lut = np.zeros((n + 2) * 4, np.float64)
-        _calculate_lut(lut, splineId)
+        _calculate_lut(lut, spline_id)
         LUTS[key] = lut
     
-    return  LUTS[key]
+    return LUTS[key]
 
 
 @numba.jit
-def _calculate_lut(lut, splineId):
+def _calculate_lut(lut, spline_id):
     
     n = lut.size // 4 - 2
     step = 1.0 / n
@@ -128,34 +140,16 @@ def _calculate_lut(lut, splineId):
         t += step
         out = lut[i * 4:]
         # For each possible t, calculate the coefficients
-        if splineId == 0.0:
-            cubicsplinecoef_catmullRom(t, out)
-        elif splineId <= 1.0:
-            cubicsplinecoef_cardinal(t, out, splineId) # tension=splineId
-        elif splineId == 2.0:
-            cubicsplinecoef_basis(t, out)
-        elif splineId == 3.0:
-            cubicsplinecoef_hermite(t, out)
-        elif splineId == 4.0:
-            cubicsplinecoef_lagrange(t, out)
-        elif splineId == 5.0:
-            cubicsplinecoef_lanczos(t, out)
-        elif splineId == 97.0:
-            cubicsplinecoef_nearest(t, out)
-        elif splineId == 98.0:
-            cubicsplinecoef_linear(t, out)
-        elif splineId == 99.0:
-            cubicsplinecoef_quadratic(t, out)
+        set_cubic_spline_coefs(t, spline_id, out)
 
 
 def spline_type_to_id(spline_type):
     """ spline_type_to_id(spline_type)
     
-    Method to map a spline name to an integer ID. This is used
-    so that the LUT can be created relatively fast without having to
-    repeat the loop for each spline type.
+    Method to map a spline name to an integer ID. This is used so that
+    set_cubic_spline_coefs() can be efficient.
     
-    spline_type can also be a number between -1 and 1, representing
+    The spline_type can also be a number between -1 and 1, representing
     the tension for a Cardinal spline.
     """
     
@@ -189,7 +183,7 @@ def spline_type_to_id(spline_type):
         raise ValueError('Unknown spline type: ' + str(spline_type))
 
 
-@numba.jit(nopython=True, nogil=True)
+@numba.jit(nopython=True)
 def get_coef(lut, t):
     """ get_coef(lut, t)
     
@@ -202,42 +196,9 @@ def get_coef(lut, t):
     return lut[i1:i1 + 4]
 
 
-@numba.jit(nopython=True, nogil=True)
-def get_coef_linear(lut, t, out):
-    """ get_coef_linear(lut, t out)
-    
-    Like get_coef() but calculates more precise coefficients by linearly
-    interpolating them and setting them in the given output array.
-    This is costly though, and probably not worth it.
-    """
-    n = lut.size // 4 - 2
-    i = t * n
-    i1 = int(i)
-    i2 = i1 + 1
-    t2 = i - i1
-    t1 = 1.0 - t2
-    
-    i1 *= 4
-    i2 *= 4
-    
-    out[0] = lut[i1 + 0] * t1 + lut[i2 + 0] * t2
-    out[1] = lut[i1 + 1] * t1 + lut[i2 + 1] * t2
-    out[2] = lut[i1 + 2] * t1 + lut[i2 + 2] * t2
-    out[3] = lut[i1 + 3] * t1 + lut[i2 + 3] * t2
-
-
-@numba.jit
-def get_coef_from_index(lut, i):
-    """ get_coef_from_index(i)
-    
-    Get the spline coefficients using the index in the table.
-    """
-    return lut[4 * i: 4 * i + 4]
-
-
 ## The coefficient functions
 
-@numba.jit#((numba.float64, numba.float64[:]), nopython=True)
+@numba.jit(nopython=True)
 def cubicsplinecoef_catmullRom(t, out):
     # See the doc for the catmull-rom spline, this is how the two splines
     # are combined by simply adding (and dividing by two) 
@@ -331,27 +292,3 @@ def cubicsplinecoef_quadratic(t, out):
     out[1] = -0.25*t**2 - 0.75*t + 1
     out[2] = -0.25*t**2 + 1.25*t
     out[3] = 0.25*t**2 - 0.25*t
-
-
-
-@numba.jit#((numba.float64, numba.float64, numba.float64[:]), nopython=True)
-def set_cubic_spline_coefs(t, spline_id, out):
-    """Set cubic spline coefficients in given array out."""
-    if spline_id == 0.0:
-        cubicsplinecoef_catmullRom(t, out)  # "best" one on top
-    elif spline_id <= 1.0:
-        cubicsplinecoef_cardinal(t, out, spline_id)  # tension=spline_id
-    elif spline_id == 5.0:
-        cubicsplinecoef_lanczos(t, out)  # common in Audio
-    elif spline_id == 2.0:
-        cubicsplinecoef_basis(t, out)
-    elif spline_id == 3.0:
-        cubicsplinecoef_hermite(t, out)
-    elif spline_id == 4.0:
-        cubicsplinecoef_lagrange(t, out)
-    elif spline_id == 97.0:
-        cubicsplinecoef_nearest(t, out)
-    elif spline_id == 98.0:
-        cubicsplinecoef_linear(t, out)
-    elif spline_id == 99.0:
-        cubicsplinecoef_quadratic(t, out)

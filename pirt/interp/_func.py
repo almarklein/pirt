@@ -5,7 +5,6 @@ import numpy as np
 
 from . import Aarray, diffuse
 
-from ._cubiclut import get_cubic_spline_coefs, get_lut, get_coef, get_coef_linear
 from ._backward import warp, awarp
 from ._forward import project, aproject
 from ._misc import make_samples_absolute, meshgrid, uglyRoot

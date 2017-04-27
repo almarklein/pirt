@@ -2,7 +2,7 @@ import numpy as np
 import numba
 from numba import cuda
 
-from ._cubiclut import get_lut, get_coef, get_coef_linear
+from ._cubic import spline_type_to_id, set_cubic_spline_coefs
 
 
 def project(data, deltas):

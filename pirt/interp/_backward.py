@@ -4,8 +4,8 @@ import numpy as np
 import numba
 from numba import cuda
 
-from ._cubiclut import get_lut, get_coef, set_cubic_spline_coefs, spline_type_to_id
-from ._cubiclut import cubicsplinecoef_catmullRom, cubicsplinecoef_cardinal, cubicsplinecoef_lanczos
+from ._cubic import spline_type_to_id, set_cubic_spline_coefs
+from ._cubic import cubicsplinecoef_catmullRom, cubicsplinecoef_cardinal
 
 @numba.jit(nopython=True, nogil=True)
 def floor(i):
@@ -109,8 +109,7 @@ def warp(data, samples, order=1, spline_type=0.0):
     if order not in [0, 1, 2, 3]:
         raise ValueError('Invalid order of interpolation.')
     
-    # Prepare lut and empty result array
-    lut = get_lut(spline_type)
+    # Prepare spline_id and empty result array
     spline_id = spline_type_to_id(spline_type)
     result = np.empty(samples[0].shape, data.dtype)
     
@@ -124,7 +123,7 @@ def warp(data, samples, order=1, spline_type=0.0):
     
     # Go
     if data.ndim == 1:
-        warp1(data, result.ravel(), samples[0].ravel(), order, lut)
+        warp1(data, result.ravel(), samples[0].ravel(), order, spline_id)
     elif data.ndim == 2:
         warp2(data, result.ravel(), samples[0].ravel(), samples[1].ravel(), order, spline_id)
     elif data.ndim == 3:
@@ -164,10 +163,12 @@ def awarp(data, samples, *args, **kwargs):
 
 
 @numba.jit(nopython=True, nogil=True)
-def warp1(data_, result_, samplesx_, order, lut):
+def warp1(data_, result_, samplesx_, order, spline_id):
     
     Ni = samplesx_.size
     Nx = data_.shape[0]
+    
+    ccx = np.empty((4, ), np.float64)
     
     if order == 3:
         
@@ -179,7 +180,13 @@ def warp1(data_, result_, samplesx_, order, lut):
             
             if ix >= 1 and ix < Nx-2:
                 # Cubic interpolation
-                ccx = get_coef(lut, tx)
+                
+                # Get coefficients.
+                if spline_id <= 1.0:  # By far most common, make it fast!
+                    cubicsplinecoef_cardinal(tx, ccx, spline_id)  # tension=spline_id
+                else:  # Select spline type, slower, but ok, because these make less sense, or are slow anyway
+                    set_cubic_spline_coefs(tx, spline_id, ccx)
+                
                 val =  data_[ix-1] * ccx[0]
                 val += data_[ix  ] * ccx[1]
                 val += data_[ix+1] * ccx[2]
@@ -189,8 +196,8 @@ def warp1(data_, result_, samplesx_, order, lut):
             elif dx>=-0.5 and dx<=Nx-0.5:
                 # Edge effects
                 
-                # Get coefficients
-                ccx = get_coef(lut, tx).copy()
+                # Get coefficients. Slower, but only needed at edges.
+                set_cubic_spline_coefs(tx, spline_id, ccx)
                 
                 # Correct stuff: calculate offset (max 2)
                 cx1, cx2 = 0, 4
@@ -303,31 +310,13 @@ def warp2(data_, result_, samplesx_, samplesy_, order, spline_id):
                     iy >= 1 and iy < Ny-2       ):
                 # Cubic interpolation
                 
-                #ccx = get_coef(lut, tx)
-                #ccy = get_coef(lut, ty)
-                #set_cubic_spline_coefs(tx, spline_id, ccx)
-                #set_cubic_spline_coefs(ty, spline_id, ccy)
-                if spline_id == 0.0:
-                    cubicsplinecoef_catmullRom(tx, ccx)  # "best" one on top
-                    cubicsplinecoef_catmullRom(ty, ccy)  # "best" one on top
-                elif spline_id <= 1.0:
+                # Get coefficients.
+                if spline_id <= 1.0:  # By far most common, make it fast!
                     cubicsplinecoef_cardinal(tx, ccx, spline_id)  # tension=spline_id
-                    cubicsplinecoef_cardinal(ty, ccy, spline_id)  # tension=spline_id
-                elif spline_id == 5.0:
-                    cubicsplinecoef_lanczos(tx, ccx)  # common in Audio
-                    cubicsplinecoef_lanczos(ty, ccy)  # common in Audio
-                # elif spline_id == 2.0:
-                #     cubicsplinecoef_basis(t, out)
-                # elif spline_id == 3.0:
-                #     cubicsplinecoef_hermite(t, out)
-                # elif spline_id == 4.0:
-                #     cubicsplinecoef_lagrange(t, out)
-                # elif spline_id == 97.0:
-                #     cubicsplinecoef_nearest(t, out)
-                # elif spline_id == 98.0:
-                #     cubicsplinecoef_linear(t, out)
-                # elif spline_id == 99.0:
-                #     cubicsplinecoef_quadratic(t, out)
+                    cubicsplinecoef_cardinal(ty, ccy, spline_id)
+                else:  # Select spline type, slower, but ok, because these make less sense, or are slow anyway
+                    set_cubic_spline_coefs(tx, spline_id, ccx)
+                    set_cubic_spline_coefs(ty, spline_id, ccy)
                 
                 val = 0.0
                 for cy in range(4):
@@ -339,20 +328,9 @@ def warp2(data_, result_, samplesx_, samplesy_, order, spline_id):
                     dy>=-0.5 and dy<=Ny-0.5     ):
                 # Edge effects
                 
-                # Get coefficients
+                # Get coefficients. Slower, but only needed at edges.
                 set_cubic_spline_coefs(tx, spline_id, ccx)
                 set_cubic_spline_coefs(ty, spline_id, ccy)
-                #ccx = get_coef(lut, tx).copy()
-                #ccy = get_coef(lut, ty).copy()
-                # if spline_id == 0.0:
-                #     cubicsplinecoef_catmullRom(tx, ccx)  # "best" one on top
-                #     cubicsplinecoef_catmullRom(ty, ccy)  # "best" one on top
-                # elif spline_id <= 1.0:
-                #     cubicsplinecoef_cardinal(tx, ccx, spline_id)  # tension=spline_id
-                #     cubicsplinecoef_cardinal(ty, ccy, spline_id)  # tension=spline_id
-                # elif spline_id == 5.0:
-                #     cubicsplinecoef_lanczos(tx, ccx)  # common in Audio
-                #     cubicsplinecoef_lanczos(ty, ccy)  # common in Audio
                 
                 # Correct stuff: calculate offset (max 2)
                 cx1, cx2 = 0, 4

@@ -16,7 +16,7 @@ import os
 from pirt.utils import Point, Aarray
 from pirt.gaussfun import diffuse
 
-from ._cubiclut import get_cubic_spline_coefs, get_lut, get_coef, get_coef_linear
+from ._cubic import get_cubic_spline_coefs
 from ._backward import warp, awarp
 from ._forward import project, aproject
 from ._misc import meshgrid, uglyRoot
