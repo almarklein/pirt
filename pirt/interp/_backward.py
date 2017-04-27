@@ -7,6 +7,7 @@ from numba import cuda
 from ._cubic import spline_type_to_id, set_cubic_spline_coefs
 from ._cubic import cubicsplinecoef_catmullRom, cubicsplinecoef_cardinal, cubicsplinecoef_quadratic
 
+
 @numba.jit(nopython=True, nogil=True)
 def floor(i):
     if i >= 0:
@@ -125,8 +126,7 @@ def warp(data, samples, order=1, spline_type=0.0):
     elif data.ndim == 2:
         warp2(data, result.ravel(), samples[0].ravel(), samples[1].ravel(), order, spline_id)
     elif data.ndim == 3:
-        tmp = samples
-        result = warp3(data, tmp[0], tmp[1], tmp[2], order, spline_type)
+        warp3(data, result.ravel(), samples[0].ravel(), samples[1].ravel(), samples[2].ravel(), order, spline_id)
     
     # Make Anisotropic array if input data was too
     # --> No: We do not know what the sample points are
@@ -295,6 +295,7 @@ def warp2(data_, result_, samplesx_, samplesy_, order, spline_id):
                     set_cubic_spline_coefs(tx, spline_id, ccx)
                     set_cubic_spline_coefs(ty, spline_id, ccy)
                 
+                # Apply
                 val = 0.0
                 for cy in range(4):
                     for cx in range(4):
@@ -395,6 +396,185 @@ def warp2(data_, result_, samplesx_, samplesy_, order, spline_id):
                 # Out of range
                 result_[i] = 0.0
 
+
+@numba.jit(nopython=True, nogil=True)
+def warp3(data_, result_, samplesx_, samplesy_, samplesz_, order, spline_id):
+    
+    Ni = samplesx_.size
+    Nz = data_.shape[0]
+    Ny = data_.shape[1]
+    Nx = data_.shape[2]
+    
+    ccx = np.empty((4, ), np.float64)
+    ccy = np.empty((4, ), np.float64)
+    ccz = np.empty((4, ), np.float64)
+    
+    if order == 3:
+        
+        # Iterate over all samples
+        for i in range(0, Ni):
+            
+            # Get integer sample location and t-factor
+            dx = samplesx_[i]; ix = floor(dx); tx = dx-ix
+            dy = samplesy_[i]; iy = floor(dy); ty = dy-iy
+            dz = samplesz_[i]; iz = floor(dz); tz = dz-iz
+            
+            if (    ix >= 1 and ix < Nx-2 and 
+                    iy >= 1 and iy < Ny-2 and
+                    iz >= 1 and iz < Nz-2       ):
+                # Cubic interpolation
+                
+                # Get coefficients.
+                if spline_id <= 1.0:  # By far most common, make it fast!
+                    cubicsplinecoef_cardinal(tx, ccx, spline_id)  # tension=spline_id
+                    cubicsplinecoef_cardinal(ty, ccy, spline_id)
+                    cubicsplinecoef_cardinal(tz, ccz, spline_id)
+                elif spline_id == 99.0:
+                    cubicsplinecoef_quadratic(tx, ccx)
+                    cubicsplinecoef_quadratic(ty, ccy)
+                    cubicsplinecoef_quadratic(tz, ccz)
+                else:  # Select spline type, slower, but ok, because these make less sense, or are slow anyway
+                    set_cubic_spline_coefs(tx, spline_id, ccx)
+                    set_cubic_spline_coefs(ty, spline_id, ccy)
+                    set_cubic_spline_coefs(tz, spline_id, ccz)
+                
+                # Apply
+                val = 0.0
+                for cz in range(4):
+                    for cy in range(4):
+                        for cx in range(4):
+                            val += data_[iz+cz-1,iy+cy-1,ix+cx-1] * (
+                                            ccz[cz] * ccy[cy] * ccx[cx] )
+                result_[i] = val
+            
+            elif (  dx>=-0.5 and dx<=Nx-0.5 and 
+                    dy>=-0.5 and dy<=Ny-0.5 and
+                    dz>=-0.5 and dz<=Nz-0.5     ):
+                # Edge effects
+                
+                # Get coefficients. Slower, but only needed at edges.
+                set_cubic_spline_coefs(tx, spline_id, ccx)
+                set_cubic_spline_coefs(ty, spline_id, ccy)
+                set_cubic_spline_coefs(tz, spline_id, ccz)
+                
+                # Correct stuff: calculate offset (max 2)
+                cx1, cx2 = 0, 4
+                cy1, cy2 = 0, 4
+                cz1, cz2 = 0, 4
+                #
+                if ix<1: cx1+=1-ix;
+                if ix>Nx-3: cx2+=(Nx-3)-ix;
+                #
+                if iy<1: cy1+=1-iy;
+                if iy>Ny-3: cy2+=(Ny-3)-iy;
+                #
+                if iz<1: cz1+=1-iz;
+                if iz>Nz-3: cz2+=(Nz-3)-iz;
+                
+                # Correct coefficients, so that the sum is one
+                val = 0.0
+                for cx in range(cx1, cx2):  val += ccx[cx]
+                val = 1.0/val
+                for cx in range(cx1, cx2):  ccx[cx] *= val
+                #
+                val = 0.0
+                for cy in range(cy1, cy2):  val += ccy[cy]
+                val = 1.0/val
+                for cy in range(cy1, cy2):  ccy[cy] *= val
+                #
+                val = 0.0
+                for cz in range(cz1, cz2):  val += ccz[cz]
+                val = 1.0/val
+                for cz in range(cz1, cz2):  ccz[cz] *= val
+                
+                # Combine elements 
+                # No need to pre-calculate indices: the C compiler is well
+                # capable of making these optimizations.
+                val = 0.0
+                for cz in range(cz1, cz2):
+                    for cy in range(cy1, cy2):
+                        for cx in range(cx1, cx2):
+                            val += data_[iz+cz-1,iy+cy-1,ix+cx-1] * ccz[cz] * ccy[cy] * ccx[cx]
+                result_[i] = val
+            
+            else:
+                # Out of range
+                result_[i] = 0.0
+    
+    elif order == 1:
+        
+        # Iterate over all samples
+        for i in range(0, Ni):
+            
+            # Get integer sample location and t-factor
+            dx = samplesx_[i]; ix = floor(dx); tx = dx-ix
+            dy = samplesy_[i]; iy = floor(dy); ty = dy-iy
+            dz = samplesz_[i]; iz = floor(dz); tz = dz-iz
+            
+            if (    ix >= 0 and ix < Nx-1 and
+                    iy >= 0 and iy < Ny-1 and
+                    iz >= 0 and iz < Nz-1       ):
+                # Linear interpolation
+                val =  data_[iz  ,iy,  ix  ] * (1.0-tz) * (1.0-ty) * (1.0-tx)
+                val += data_[iz  ,iy,  ix+1] * (1.0-tz) * (1.0-ty) *      tx
+                val += data_[iz  ,iy+1,ix  ] * (1.0-tz) *      ty  * (1.0-tx)
+                val += data_[iz  ,iy+1,ix+1] * (1.0-tz) *      ty  *      tx
+                #
+                val += data_[iz+1,iy,  ix  ] *      tz  * (1.0-ty) * (1.0-tx)
+                val += data_[iz+1,iy,  ix+1] *      tz  * (1.0-ty) *      tx
+                val += data_[iz+1,iy+1,ix  ] *      tz  *      ty  * (1.0-tx)
+                val += data_[iz+1,iy+1,ix+1] *      tz  *      ty  *      tx
+                result_[i] = val
+            elif (  dx>=-0.5 and dx<=Nx-0.5 and 
+                    dy>=-0.5 and dy<=Ny-0.5 and
+                    dz>=-0.5 and dz<=Nz-0.5    ):
+                # Edge effects
+                if ix<0: tx+=ix; ix=0; 
+                if ix>Nx-2: tx+=ix-(Nx-2); ix=Nx-2; 
+                #
+                if iy<0: ty+=iy; iy=0; 
+                if iy>Ny-2: ty+=iy-(Ny-2); iy=Ny-2; 
+                #
+                if iz<0: tz+=iz; iz=0; 
+                if iz>Nz-2: tz+=iz-(Nz-2); iz=Nz-2; 
+                # Linear interpolation (edges)
+                val =  data_[iz  ,iy,  ix  ] * (1.0-tz) * (1.0-ty) * (1.0-tx)
+                val += data_[iz  ,iy,  ix+1] * (1.0-tz) * (1.0-ty) *      tx
+                val += data_[iz  ,iy+1,ix  ] * (1.0-tz) *      ty  * (1.0-tx)
+                val += data_[iz  ,iy+1,ix+1] * (1.0-tz) *      ty  *      tx
+                #
+                val += data_[iz+1,iy,  ix  ] *      tz  * (1.0-ty) * (1.0-tx)
+                val += data_[iz+1,iy,  ix+1] *      tz  * (1.0-ty) *      tx
+                val += data_[iz+1,iy+1,ix  ] *      tz  *      ty  * (1.0-tx)
+                val += data_[iz+1,iy+1,ix+1] *      tz  *      ty  *      tx
+                result_[i] = val
+            else:
+                # Out of range
+                result_[i] = 0.0
+    
+    else:
+        
+        # Iterate over all samples
+        for i in range(0, Ni):
+            
+            # Get integer sample location
+            dx = samplesx_[i]; ix = floor(dx+0.5)
+            dy = samplesy_[i]; iy = floor(dy+0.5)
+            dz = samplesz_[i]; iz = floor(dz+0.5)
+            
+            if (    ix >= 0 and ix < Nx and
+                    iy >= 0 and iy < Ny and
+                    iz >= 0 and iz < Nz     ):
+                # Nearest neighbour interpolation
+                result_[i] = data_[iz,iy,ix]
+            else:
+                # Out of range
+                result_[i] = 0.0
+
+
+# todo: Cuda!
+# Seemed just a bit faster when I tried it on 2D data and using Luts, but could
+# be more performant with direct coefficients and on 3D!
 
 @cuda.jit
 def warp2_cuda(data_, result_, samplesx_, samplesy_, order, lutn, lut):

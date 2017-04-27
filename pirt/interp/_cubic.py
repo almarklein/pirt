@@ -3,6 +3,7 @@ Cubic spline coefficients and lookup tables.
 """
 
 import numpy as np
+from numpy import sin, pi  # for Lanczos
 import numba
 
 # Keep a cache of calculated luts
@@ -54,8 +55,7 @@ def get_cubic_spline_coefs(t, spline_type=0.0):
         very similar to the Cardinal spline with a tension of -0.25.
         
         'quadratic': Quadratic interpolation with a support of 4, essentially
-        the addition of the two quadratic polynoms. Added for completeness
-        and testing.
+        the addition of the two quadratic polynoms.
         
         'linear': Linear interpolation. Effective support is 2. Added
         for completeness and testing.
@@ -244,8 +244,6 @@ def cubicsplinecoef_lagrange(t, out):
     k= 2  
     out[3] = (t+1)/(k+1) * (t  )/(k  ) * (t-1)/(k-1)
 
-
-from numpy import sin, pi
 
 @numba.jit(nopython=True)
 def cubicsplinecoef_lanczos(t, out):
