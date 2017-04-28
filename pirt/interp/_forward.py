@@ -1,6 +1,8 @@
+""" Low level project() function implemented with Numba to make it super fast.
+"""
+
 import numpy as np
 import numba
-from numba import cuda
 
 from ._cubic import spline_type_to_id, set_cubic_spline_coefs
 

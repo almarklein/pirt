@@ -1,4 +1,5 @@
-# from math import floor
+""" Low level warp() function implemented with Numba to make it super fast.
+"""
 
 import numpy as np
 import numba

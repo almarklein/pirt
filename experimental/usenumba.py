@@ -14,7 +14,9 @@ and maybe the effect is negligable for linear/quasi linear.
 # todo: splinegrid cython
 # todo: check other todos
 # todo: perhaps we can speed other things up, e.g. via a quasi-exponent function
-# todo: perhaps we can speed things up via Cuda, relatively easy with Numba
+# todo: perhaps we can speed things up in 3D via Cuda, relatively easy with Numba
+# todo: perhaps we can speed things up with threads and nogil
+
 
 import sys
 from time import perf_counter

@@ -202,7 +202,7 @@ def get_coef(lut, t):
 def cubicsplinecoef_catmullRom(t, out):
     # See the doc for the catmull-rom spline, this is how the two splines
     # are combined by simply adding (and dividing by two) 
-    out[0] = - 0.5*t**3 + t**2 - 0.5*t        
+    out[0] = - 0.5*t**3 + t**2 - 0.5*t
     out[1] =   1.5*t**3 - 2.5*t**2 + 1
     out[2] = - 1.5*t**3 + 2*t**2 + 0.5*t
     out[3] =   0.5*t**3 - 0.5*t**2

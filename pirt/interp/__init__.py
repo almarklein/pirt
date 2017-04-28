@@ -21,6 +21,7 @@ from ._backward import warp, awarp
 from ._forward import project, aproject
 from ._misc import meshgrid, uglyRoot
 
+interp = warp  # alias
 
 # Import user-friendly functions
 from ._func import deform_backward, deform_forward
