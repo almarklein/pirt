@@ -4,6 +4,8 @@ import numpy as np
 import pirt
 
 
+## Warp
+
 def test_warp1d():
     
     data = np.array([10, 21, 31, 40, 50, 60, 70]).astype('float32')
@@ -107,7 +109,82 @@ def test_warp3d():
     print('warp 3d ok')
 
 
-def test_times():
+## Project
+
+def test_project1d():
+    
+    data = np.array([0, 9, 0, 0, 0]).astype('float32')
+    
+    # No change
+    result = pirt.project(data, np.array([0, 1, 2, 3, 4]))
+    assert result.tolist() == [0, 9, 0, 0, 0]
+    assert result.shape == (5, )
+    
+    # Project out of bounds
+    result = pirt.project(data, np.array([99, 99, 99, 3, 4]))
+    assert result.tolist() == [0, 0, 0, 0, 0]
+    
+    # Project to other spot
+    result = pirt.project(data, np.array([0, 3, 2, 3, 4]))
+    assert result[1] < 9
+    assert result[3] >= 4.5  # loads of splatting
+    
+    print('project 1d ok')
+
+
+def test_project2d():
+    
+    data = np.array([[10, 20, 30], [40, 50, 60], [70, 80, 90]]).astype('float32')
+    
+    # No change
+    result = pirt.project(data, (np.array([[0, 1, 2], [0, 1, 2], [0, 1, 2]]),
+                                 np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2]])))
+    assert result.tolist() == data.tolist()
+    assert result.shape == (3, 3)
+    
+    # Project away
+    result = pirt.project(data, (np.array([[0, 1, 2], [0, 1, 2], [0, 1, -99]]),
+                                 np.array([[0, 0, 0], [1, 1, 1], [2, 2, -99]])))
+    assert result.max() == 80
+    
+    # Project to other spot
+    result = pirt.project(data, (np.array([[0, 1, 2], [0, 1, 2], [0, 1, 0]]),
+                                 np.array([[0, 0, 0], [1, 1, 1], [2, 2, 0]])))
+    assert result[0, 0] >= 50
+    
+    print('project 2d ok')
+
+
+def test_project3d():
+    
+    samplesx, samplesy, samplesz = pirt.meshgrid([0, 1, 2], [0, 1, 2], [0, 1, 2])
+    data = sum(pirt.meshgrid([1, 2, 3], [10, 20, 30], [100, 200, 300]))
+    
+    # no change
+    result = pirt.project(data, (samplesx, samplesy, samplesz))
+    assert result.tolist() == data.tolist()
+    assert result.shape == (3, 3, 3)
+    
+    # Project away
+    samplesx[-1, -1, -1] = -99
+    samplesy[-1, -1, -1] = -99
+    samplesz[-1, -1, -1] = -99
+    result = pirt.project(data, (samplesx, samplesy, samplesz))
+    assert result.max() < 333
+    
+    # Project to other spot
+    samplesx[-1, -1, -1] = 0
+    samplesy[-1, -1, -1] = 0
+    samplesz[-1, -1, -1] = 0
+    result = pirt.project(data, (samplesx, samplesy, samplesz))
+    assert result[0, 0, 0] >= 200
+    
+    print('project 3d ok')
+
+
+## Timings
+
+def test_times_warp():
     # This is to test that all funcs are connectly numba-decorated.
     
     data1 = np.arange(27).astype('float32')
@@ -142,11 +219,55 @@ def test_times():
     print(te)
     assert te < 0.01
     
-    print('timings ok')
+    print('warp timings ok')
+
+
+def test_times_project():
+    # This is to test that all funcs are connectly numba-decorated.
+    
+    data1 = np.arange(9000).astype('float32')
+    data2 = data1.reshape((1000, 9))
+    data3 = data1.reshape((1000, 3, 3))
+    
+    samplesx = samplesy = samplesz = np.ones(1000*9, ) * 1.1
+    
+    # Warm up
+    pirt.project(data1, (samplesx, ))
+    pirt.project(data2, (samplesx.reshape(1000, 9), samplesy.reshape(1000, 9)))
+    pirt.project(data3, (samplesx.reshape(1000, 3, 3), samplesy.reshape(1000, 3, 3), samplesz.reshape(1000, 3, 3)))
+    
+    # 1D
+    t0 = time.time()
+    pirt.project(data1, (samplesx, ))
+    te = time.time() - t0
+    print(te)
+    assert te < 0.01
+    
+    # 2D
+    t0 = time.time()
+    pirt.project(data2, (samplesx.reshape(1000, 9), samplesy.reshape(1000, 9)))
+    te = time.time() - t0
+    print(te)
+    assert te < 0.01
+    
+    # 3D
+    t0 = time.time()
+    pirt.project(data3, (samplesx.reshape(1000, 3, 3), samplesy.reshape(1000, 3, 3), samplesz.reshape(1000, 3, 3)))
+    te = time.time() - t0
+    print(te)
+    assert te < 0.01
+    
+    print('project timings ok')
 
 
 if __name__ == '__main__':
     test_warp1d()
     test_warp2d()
     test_warp3d()
-    test_times()
+    
+    test_project1d()
+    test_project2d()
+    test_project3d()
+    
+    test_times_warp()
+    test_times_project()
