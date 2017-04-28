@@ -109,13 +109,16 @@ def warp(data, samples, order=1, spline_type=0.0):
     spline_id = spline_type_to_id(spline_type)
     result = np.empty(samples[0].shape, data.dtype)  # shape of samples, dtype of data
     
-    # Some code snippets to do it on Cuda, would need to be incorporated to make it work
+    # Enable cuda. Only implemented for 2D. Looks like its even slower, oddly enough.
     gpu = False
     if gpu:
-        threadsperblock = 32
-        blockspergrid = (samplesx_.size + (threadsperblock - 1)) # threadperblock
-        interp2_cuda[blockspergrid, threadsperblock](image_, result_, samplesx_, samplesy_, order, coeffx.N, cuda.to_device(coeffx._LUT.astype('float64')))
-        result_.copy_to_host(result.ravel())  # only this array is copied back
+        threadsperblock = 64
+        blockspergrid = (result.size + (threadsperblock - 1)) # threadperblock
+        samples = [cuda.to_device(s) for s in samples]
+        data = cuda.to_device(data)
+        warp2_cuda[blockspergrid, threadsperblock](data, result.ravel(), samples[0].ravel(), samples[1].ravel(), order, spline_id)
+        # result_cuda_.copy_to_host(result)  # only this array is copied back
+        return result
     
     # Go
     if data.ndim == 1:
@@ -569,19 +572,27 @@ def warp3(data_, result_, samplesx_, samplesy_, samplesz_, order, spline_id):
                 result_[i] = 0.0
 
 
-# todo: Cuda!
-# Seemed just a bit faster when I tried it on 2D data and using Luts, but could
-# be more performant with direct coefficients and on 3D!
+## Cuda
+# Atempt at Cuda implementation, but so far it is slower than the normal one.
+
+
+@cuda.jit((numba.float64, ), device=True, inline=True)
+def cuda_floor(i):
+    if i >= 0:
+        return int(i)
+    else:
+        return int(i) - 1
+
 
 @cuda.jit
-def warp2_cuda(data_, result_, samplesx_, samplesy_, order, lutn, lut):
+def warp2_cuda(data_, result_, samplesx_, samplesy_, order, spline_type):
     
-    coefsx = cuda.local.array((4, ), numba.float64)
-    coefsy = cuda.local.array((4, ), numba.float64)
     Ni = samplesx_.size
     Ny = data_.shape[0]
     Nx = data_.shape[1]
     
+    ccx = cuda.local.array((4, ), numba.float64)
+    ccy = cuda.local.array((4, ), numba.float64)
     
     if order == 3:
         
@@ -592,16 +603,23 @@ def warp2_cuda(data_, result_, samplesx_, samplesy_, order, lutn, lut):
             
             
             # Get integer sample location and t-factor
-            dx = samplesx_[i]; ix = floor(dx); tx = dx-ix
-            dy = samplesy_[i]; iy = floor(dy); ty = dy-iy
+            dx = samplesx_[i]; ix = cuda_floor(dx); tx = dx-ix
+            dy = samplesy_[i]; iy = cuda_floor(dy); ty = dy-iy
             
             if (    ix >= 1 and ix < Nx-2 and 
                     iy >= 1 and iy < Ny-2       ):
-                # Cubic interpolation
-                # ccx = get_coef(lut, lutn, tx)
-                # ccy = get_coef(lut, lutn, ty)
-                i1 = floor( tx * lutn + 0.5) * 4; ccx = lut[i1:i1 + 4]
-                i1 = floor( ty * lutn + 0.5) * 4; ccy = lut[i1:i1 + 4]
+                
+                # Get coefficients.
+                ccx[0] = - 0.5*tx**3 + tx**2 - 0.5*tx        
+                ccx[1] =   1.5*tx**3 - 2.5*tx**2 + 1
+                ccx[2] = - 1.5*tx**3 + 2*tx**2 + 0.5*tx
+                ccx[3] =   0.5*tx**3 - 0.5*tx**2
+                ccy[0] = - 0.5*ty**3 + ty**2 - 0.5*ty        
+                ccy[1] =   1.5*ty**3 - 2.5*ty**2 + 1
+                ccy[2] = - 1.5*ty**3 + 2*ty**2 + 0.5*ty
+                ccy[3] =   0.5*ty**3 - 0.5*ty**2
+                
+                # Apply
                 val = 0.0
                 for cy in range(4):
                     for cx in range(4):
@@ -612,12 +630,15 @@ def warp2_cuda(data_, result_, samplesx_, samplesy_, order, lutn, lut):
                     dy>=-0.5 and dy<=Ny-0.5     ):
                 # Edge effects
                 
-                # Get coefficients, make copy, because we need to edit tem
-                i1 = floor( tx * lutn + 0.5) * 4; ccx = lut[i1:i1 + 4]
-                i1 = floor( ty * lutn + 0.5) * 4; ccy = lut[i1:i1 + 4]
-                for i in range(4):
-                    coefsx[i] = ccx[i]
-                    coefsy[i] = ccy[i]
+                # Get coefficients. Slower, but only needed at edges.
+                ccx[0] = - 0.5*tx**3 + tx**2 - 0.5*tx        
+                ccx[1] =   1.5*tx**3 - 2.5*tx**2 + 1
+                ccx[2] = - 1.5*tx**3 + 2*tx**2 + 0.5*tx
+                ccx[3] =   0.5*tx**3 - 0.5*tx**2
+                ccy[0] = - 0.5*ty**3 + ty**2 - 0.5*ty        
+                ccy[1] =   1.5*ty**3 - 2.5*ty**2 + 1
+                ccy[2] = - 1.5*ty**3 + 2*ty**2 + 0.5*ty
+                ccy[3] =   0.5*ty**3 - 0.5*ty**2
                 
                 # Correct stuff: calculate offset (max 2)
                 cx1, cx2 = 0, 4
@@ -631,14 +652,14 @@ def warp2_cuda(data_, result_, samplesx_, samplesy_, order, lutn, lut):
                 
                 # Correct coefficients, so that the sum is one
                 val = 0.0
-                for cx in range(cx1, cx2):  val += coefsx[cx]
+                for cx in range(cx1, cx2):  val += ccx[cx]
                 val = 1.0/val
-                for cx in range(cx1, cx2):  coefsx[cx] *= val
+                for cx in range(cx1, cx2):  ccx[cx] *= val
                 #
                 val = 0.0
-                for cy in range(cy1, cy2):  val += coefsy[cy]
+                for cy in range(cy1, cy2):  val += ccy[cy]
                 val = 1.0/val
-                for cy in range(cy1, cy2):  coefsy[cy] *= val
+                for cy in range(cy1, cy2):  ccy[cy] *= val
                 
                 # Combine elements
                 # No need to pre-calculate indices: the C compiler is well
@@ -646,7 +667,7 @@ def warp2_cuda(data_, result_, samplesx_, samplesy_, order, lutn, lut):
                 val = 0.0
                 for cy in range(cy1, cy2):
                     for cx in range(cx1, cx2):
-                        val += data_[iy+cy-1,ix+cx-1] * coefsy[cy] * coefsx[cx]
+                        val += data_[iy+cy-1,ix+cx-1] * ccy[cy] * ccx[cx]
                 result_[i] = val
             
             else:
@@ -660,8 +681,8 @@ def warp2_cuda(data_, result_, samplesx_, samplesy_, order, lutn, lut):
         if i < Ni:
             
             # Get integer sample location and t-factor
-            dx = samplesx_[i]; ix = floor(dx); tx = dx-ix
-            dy = samplesy_[i]; iy = floor(dy); ty = dy-iy
+            dx = samplesx_[i]; ix = cuda_floor(dx); tx = dx-ix
+            dy = samplesy_[i]; iy = cuda_floor(dy); ty = dy-iy
             
             if (    ix >= 0 and ix < Nx-1 and
                     iy >= 0 and iy < Ny-1     ):
@@ -688,4 +709,22 @@ def warp2_cuda(data_, result_, samplesx_, samplesy_, order, lutn, lut):
             else:
                 # Out of range
                 result_[i] = 0.0
-
+    
+    else:
+        
+        # Iterate over all samples
+        #for i in range(0, Ni):
+        i = cuda.grid(1)
+        if i < Ni:
+            
+            # Get integer sample location
+            dx = samplesx_[i]; ix = cuda_floor(dx+0.5)
+            dy = samplesy_[i]; iy = cuda_floor(dy+0.5)
+            
+            if (    ix >= 0 and ix < Nx and
+                    iy >= 0 and iy < Ny     ):
+                # Nearest neighbour interpolation
+                result_[i] = data_[iy,ix]
+            else:
+                # Out of range
+                result_[i] = 0.0

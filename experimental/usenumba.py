@@ -10,11 +10,11 @@ and maybe the effect is negligable for linear/quasi linear.
 
 """
 
-# todo: all forward funcs
 # todo: slice in volume
 # todo: splinegrid cython
 # todo: check other todos
 # todo: perhaps we can speed other things up, e.g. via a quasi-exponent function
+# todo: perhaps we can speed things up via Cuda, relatively easy with Numba
 
 import sys
 from time import perf_counter
@@ -83,8 +83,8 @@ if pirt and hasattr(pirt.interp, 'interp'):
     im3 = timeit('old pirt', pirt.interp.interp, im1, coords2, order=order)
 
 if sys.version_info > (3, 5):
-    #im4 = timeit('new pirt warp/project', pirt.interp.warp, im1, coords2, order)
-    im4 = timeit('new pirt warp/project', pirt.interp.project, im1, coords2)
+    im4 = timeit('new pirt warp', pirt.interp.warp, im1, coords2, order)
+    # im4 = timeit('new pirt project', pirt.interp.project, im1, coords2)
 
 
 vv.figure(1); vv.clf()
