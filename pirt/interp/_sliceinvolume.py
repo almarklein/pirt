@@ -1,9 +1,13 @@
+""" Functionality for sampling a 2D slice from a 3D volume.
+"""
 
 from __future__ import absolute_import, print_function, division 
 
 import numpy as np
+import numba
 
-from . import Point, Aarray
+from ..utils import Point, Aarray
+from ._backward import warp
 
 
 def get_span_vectors(normal, c, d):
@@ -89,7 +93,7 @@ class SliceInVolume:
     def get_slice(self, volume, N=128, spacing=1.0):
         vec1 = self._vec1 * spacing
         vec2 = self._vec2 * spacing
-        im = interpolation_.slice_from_volume(volume, self._pos, vec1, vec2, N)
+        im = slice_from_volume(volume, self._pos, vec1, vec2, N)
         return Aarray(im, (spacing,spacing))
     
     
@@ -105,3 +109,64 @@ class SliceInVolume:
         pos.z += p2d.y * self._vec1.z + p2d.x * self._vec2.z
         #
         return pos
+
+
+def slice_from_volume(data, pos, vec1, vec2, Npatch, order=3):
+    """ slice_from_volume(data, pos, vec1, vec2, Npatch, order=3)
+    Samples a square 2D slice from a 3D volume, using a center position
+    and two vectors that span the patch. The length of the vectors
+    specify the sample distance for the patch.
+    """
+    
+    # Prepare
+    sampling, origin = (1.0, 1.0, 1.0), (0.0, 0.0, 0.0)
+    if hasattr(data, 'sampling'):
+        sampling, origin = data.sampling, data.origin
+    
+    # Generate sample positions
+    x = _slice_samples_from_volume(data, sampling, origin, (pos.x, pos.y, pos.z),
+                                   (vec1.x, vec1.y, vec1.z), (vec2.x, vec2.y, vec2.z),
+                                   Npatch)
+    samplesx, samplesy, samplesz = x
+                        
+    # Sample in 3D volume
+    return warp(data, [samplesx, samplesy, samplesz], order)
+
+
+@numba.jit(nopython=True, nogil=True)
+def _slice_samples_from_volume(data, sampling, origin, pos, vec1, vec2, Npatch, order=3):
+    
+    # Init sample arrays
+    samplesx = np.empty((Npatch, Npatch), dtype=np.float32)
+    samplesy = np.empty((Npatch, Npatch), dtype=np.float32)
+    samplesz = np.empty((Npatch, Npatch), dtype=np.float32)
+    
+    Npatch2 = Npatch / 2.0
+    
+    # Set start position
+    x, y, z = pos
+    
+    # Get anisotropy factors
+    sam_x = 1.0 / sampling[2]  # Do the division here
+    sam_y = 1.0 / sampling[1]
+    sam_z = 1.0 / sampling[0]
+    ori_x = origin[2]
+    ori_y = origin[1]
+    ori_z = origin[0]
+    
+    # Make vectors quick
+    v1x, v1y, v1z = vec1
+    v2x, v2y, v2z = vec2
+    
+    # Loop
+    for v in range(Npatch):
+        vd = v - Npatch2
+        for u in range(Npatch):
+            ud = u - Npatch2
+            
+            # Determine sample positions
+            samplesx[v, u] = ( (x + vd*v1x + ud*v2x) - ori_x) * sam_x
+            samplesy[v, u] = ( (y + vd*v1y + ud*v2y) - ori_y) * sam_y
+            samplesz[v, u] = ( (z + vd*v1z + ud*v2z) - ori_z) * sam_z
+    
+    return samplesx, samplesy, samplesz
