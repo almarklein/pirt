@@ -16,7 +16,7 @@ import numpy as np
 import numba
 from numpy import pi, sin
 
-from .interp._cubic import cubicsplinecoef_basis,
+from .interp._cubic import cubicsplinecoef_basis
 
 # # Type defs, we support float32 and float64
 # ctypedef np.float64_t GRID_T
@@ -139,7 +139,7 @@ def get_field_at(grid, samples):
     return result
 
 
-## Workhorse functions to get the field. The result is always 32 bit
+## Workhorse functions to get the field
 
 
 @numba.jit(nopython=True, nogil=True)
@@ -288,9 +288,9 @@ def _get_field3(result, grid_sampling_in_pixels, knots):
 
 
 @numba.jit(nopython=True, nogil=True)
-def _get_field_at1(result, grid_sampling_in_pixels, knots, samplesx):
+def _get_field_at1(result, grid_sampling_in_pixels, knots, samplesx_):
     
-    assert samplesx.ndim == 1
+    assert samplesx_.ndim == 1
     
     ccx = np.empty((4, ), np.float64)
     
@@ -299,10 +299,10 @@ def _get_field_at1(result, grid_sampling_in_pixels, knots, samplesx):
     gridShapex = knots.shape[0]
     
     # For each point in the set
-    for p in range(samplesx.size):
+    for p in range(samplesx_.size):
         
         # Calculate wx
-        wx = samplesx[p]
+        wx = samplesx_[p]
         
         # Calculate what is the leftmost (reference) knot on the grid,
         # and the ratio between closest and second closest knot.
@@ -327,17 +327,17 @@ def _get_field_at1(result, grid_sampling_in_pixels, knots, samplesx):
         for i in range(4):
             # Calculate interpolated value.
             val += ccx[i] * knots[ii]
-            ii + =1
+            ii += 1
         
         # Store
         result[p] = val
 
 
 @numba.jit(nopython=True, nogil=True)
-def _get_field_at2(result, grid_sampling_in_pixels, knots, samplesx, samplesy):
+def _get_field_at2(result_, grid_sampling_in_pixels, knots, samplesx_, samplesy_):
     
-    assert samplesx.ndim == 1
-    assert samplesy.ndim == 1
+    assert samplesx_.ndim == 1
+    assert samplesy_.ndim == 1
     
     ccy = np.empty((4, ), np.float64)
     ccx = np.empty((4, ), np.float64)
@@ -349,18 +349,18 @@ def _get_field_at2(result, grid_sampling_in_pixels, knots, samplesx, samplesy):
     gridShapex = knots.shape[1]
     
     # For each point in the set
-    for p in range(samplesx.size):
+    for p in range(samplesx_.size):
         
         # Calculate wx and wy
-        wx = samplesx[p]
-        wy = samplesy[p]
+        wx = samplesx_[p]
+        wy = samplesy_[p]
         
         # Calculate what is the leftmost (reference) knot on the grid,
         # and the ratio between closest and second closest knot.
         # Note the +1 to correct for padding.
         tmp = wy / grid_ySpacing + 1
         gy = int(tmp)
-        ty	= tmp - <double>gy
+        ty	= tmp - gy
         #
         tmp = wx / grid_xSpacing + 1
         gx = int(tmp)
@@ -369,7 +369,7 @@ def _get_field_at2(result, grid_sampling_in_pixels, knots, samplesx, samplesy):
         # Check if within bounds of interpolatable domain
         if (    (gy < 1 or gy >= gridShapey - 2) or
                 (gx < 1 or gx >= gridShapex - 2) ):
-            result[p] = 0.0
+            result_[p] = 0.0
             continue
         
         # Get coefficients
@@ -390,15 +390,15 @@ def _get_field_at2(result, grid_sampling_in_pixels, knots, samplesx, samplesy):
             jj += 1
         
         # Store
-        result[p] = val
+        result_[p] = val
 
 
 @numba.jit(nopython=True, nogil=True)
-def _get_field_at3(result, grid_sampling_in_pixels, knots, samplesx, samplesy, samplesz):
+def _get_field_at3(result_, grid_sampling_in_pixels, knots, samplesx_, samplesy_, samplesz_):
 
-    assert samplesx.ndim == 1
-    assert samplesy.ndim == 1
-    assert samplesz.ndim == 1
+    assert samplesx_.ndim == 1
+    assert samplesy_.ndim == 1
+    assert samplesz_.ndim == 1
     
     ccz = np.empty((4, ), np.float64)
     ccy = np.empty((4, ), np.float64)
@@ -413,12 +413,12 @@ def _get_field_at3(result, grid_sampling_in_pixels, knots, samplesx, samplesy, s
     gridShapex = knots.shape[2]
     
     # For each point in the set
-    for p in range(samplesx.size):
+    for p in range(samplesx_.size):
         
         # Calculate wx and wy
-        wx = samplesx[p]
-        wy = samplesy[p]
-        wz = samplesz[p]
+        wx = samplesx_[p]
+        wy = samplesy_[p]
+        wz = samplesz_[p]
         
         # Calculate what is the leftmost (reference) knot on the grid,
         # and the ratio between closest and second closest knot.
@@ -439,7 +439,7 @@ def _get_field_at3(result, grid_sampling_in_pixels, knots, samplesx, samplesy, s
         if (    (gx < 1 or gx >= gridShapex - 2) or
                 (gy < 1 or gy >= gridShapey - 2) or
                 (gz < 1 or gz >= gridShapez - 2)):
-            result[p] = 0.0
+            result_[p] = 0.0
             continue
         
         # Get coefficients
@@ -469,27 +469,17 @@ def _get_field_at3(result, grid_sampling_in_pixels, knots, samplesx, samplesy, s
 
 ## Functions to set the grid using a field
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def _set_field_using_num_and_dnum(grid, num, dnum):
+
+@numba.jit(nopython=True, nogil=True)
+def _set_field_using_num_and_dnum(knots_, num_, dnum_):
     
-    # Cast flat arrays
-    cdef np.ndarray[GRID_T, ndim=1] knots = grid.knots.ravel()
-    cdef np.ndarray[GRID_T, ndim=1] num_ = num.ravel()
-    cdef np.ndarray[GRID_T, ndim=1] dnum_ = dnum.ravel()
-    
-    # Loop
-    cdef int i
-    cdef double n
     for i in range(knots.size):
         n = dnum_[i]
         if n > 0.0:
-            knots[i] = num_[i] / n
-        else:
-            n = 0.0
+            knots_[i] = num_[i] / n
 
 
-def set_field(grid, field, weights, spline_type='B'):
+def set_field(grid, field, weights):
     """ set_field(grid, pp)
     Set the grid using the specified field (and optional weights).
     """
@@ -502,37 +492,22 @@ def set_field(grid, field, weights, spline_type='B'):
         raise ValueError('Field and weights must be of the same type.')
     
     # Apply proper function
-    if field.dtype.name == 'float32':
-        if grid.ndim == 1:
-            num, dnum = _set_field1_32(grid, field, weights, spline_type)
-        elif grid.ndim == 2:
-            num, dnum = _set_field2_32(grid, field, weights, spline_type)
-        elif grid.ndim == 3:
-            num, dnum = _set_field3_32(grid, field, weights, spline_type)
-        else:
-            tmp = 'This method does not support grids of that dimension.'
-            raise RuntimeError(tmp)
-    
-    elif field.dtype.name == 'float64':
-        if grid.ndim == 1:
-            num, dnum = _set_field1_64(grid, field, weights, spline_type)
-        elif grid.ndim == 2:
-            num, dnum = _set_field2_64(grid, field, weights, spline_type)
-        elif grid.ndim == 3:
-            num, dnum = _set_field3_64(grid, field, weights, spline_type)
-        else:
-            tmp = 'This method does not support grids of that dimension.'
-            raise RuntimeError(tmp)
-    
+    if grid.ndim == 1:
+        num, dnum = _set_field1(grid.grid_sampling_in_pixels, grid.knots, field, weights)
+    elif grid.ndim == 2:
+        num, dnum = _set_field2(grid.grid_sampling_in_pixels, grid.knots, field, weights)
+    elif grid.ndim == 3:
+        num, dnum = _set_field3(grid.grid_sampling_in_pixels, grid.knots, field, weights)
     else:
-        raise ValueError('This function only supports 32 bit and 64 bit floats.')
+        tmp = 'This method does not support grids of that dimension.'
+        raise RuntimeError(tmp)
     
     # Apply
-    _set_field_using_num_and_dnum(grid, num, dnum)
+    _set_field_using_num_and_dnum(grid.knots.ravel(), num.ravel(), dnum.ravel())
 
 
-def set_field_sparse(grid, pp, values, spline_type='B'):
-    """ set_field_sparse(grid, pp, values, spline_type='B')
+def set_field_sparse(grid, pp, values):
+    """ set_field_sparse(grid, pp, values)
     
     Set the grid by providing the field values at a set of points (wich
     are in world coordinates).  
@@ -543,76 +518,41 @@ def set_field_sparse(grid, pp, values, spline_type='B'):
     if grid.ndim != pp.shape[1]:
         raise ValueError('Dimension of grid and pointset do not match.')
     
-    
     # Apply proper function
-    if values.dtype.name == 'float32':
-        # Apply proper function
-        if grid.ndim == 1:
-            num, dnum = _set_field_sparse1_32(grid, pp, values, spline_type)
-        elif grid.ndim == 2:
-            num, dnum = _set_field_sparse2_32(grid, pp, values, spline_type)
-        elif grid.ndim == 3:
-            num, dnum = _set_field_sparse3_32(grid, pp, values, spline_type)
-        else:
-            tmp = 'This method does not support grids of that dimension.'
-            raise RuntimeError(tmp)
-    
-    elif values.dtype.name == 'float64':
-        # Apply proper function
-        if grid.ndim == 1:
-            num, dnum = _set_field_sparse1_64(grid, pp, values, spline_type)
-        elif grid.ndim == 2:
-            num, dnum = _set_field_sparse2_64(grid, pp, values, spline_type)
-        elif grid.ndim == 3:
-            num, dnum = _set_field_sparse3_64(grid, pp, values, spline_type)
-        else:
-            tmp = 'This method does not support grids of that dimension.'
-            raise RuntimeError(tmp)
-    
+    if grid.ndim == 1:
+        num, dnum = _set_field_sparse1(grid.grid_sampling, grid.knots, pp, value)
+    elif grid.ndim == 2:
+        num, dnum = _set_field_sparse2(grid.grid_sampling, grid.knots, pp, value)
+    elif grid.ndim == 3:
+        num, dnum = _set_field_sparse3(grid.grid_sampling, grid.knots, pp, value)
     else:
-        raise ValueError('This function only supports 32 bit and 64 bit floats.')
-    
+        tmp = 'This method does not support grids of that dimension.'
+        raise RuntimeError(tmp)
+
     # Apply
-    _set_field_using_num_and_dnum(grid, num, dnum)
+    _set_field_using_num_and_dnum(grid.knots.ravel(), num.ravel(), dnum.ravel())
 
 
-## 32 bit field set functions
+## Workhorse functions to set the field
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def _set_field1_32(grid, field, weights, spline_type='B'):
+@numba.jit(nopython=True, nogil=True)
+def _set_field1(grid_sampling_in_pixels, knots, field, weights):
     
-    # Predefs
-    cdef int x, y, z, gx, gy, gz 
-    cdef double wx, wy, wz
-    cdef double tx, ty, tz
-    cdef int p, i, j, k, ii, jj, kk
-    cdef double *ccx, *ccy, *ccz
-    cdef double val, tmp, weight, omega, omega2, omsum
+    ccx = np.empty((4, ), np.float64)
     
-    # Create and init cubic interpolator
-    cdef CoefLut lut = CoefLut.get_lut(spline_type)
-    cdef AccurateCoef coeffx = AccurateCoef(lut)
-    
-    # Grid stuff    
-    cdef double grid_xSpacing = grid.grid_sampling_in_pixels[0]
-    
-    # Cast input arrrays
-    cdef np.ndarray[FLOAT32_T, ndim=1] field_ = field
-    cdef np.ndarray[FLOAT32_T, ndim=1] weights_ = weights
+    grid_xSpacing = grid_sampling_in_pixels[0]
     
     # Create temporary arrays the same size as the grid
-    cdef np.ndarray[GRID_T, ndim=1] num_ = np.zeros_like(grid.knots)
-    cdef np.ndarray[GRID_T, ndim=1] dnum_ = np.zeros_like(grid.knots)
-    
+    num = np.zeros_like(knots)
+    dnum = np.zeros_like(knots)
     
     # For each pixel ...        
-    for x in range(field_.shape[0]):
+    for x in range(field.shape[0]):
         
         # Get val and alpha
-        val = field_[x]
-        weight = weights_[x]
+        val = field[x]
+        weight = weights[x]
         
         # Evaluate this one?
         if weight <= 0.0:
@@ -621,15 +561,15 @@ def _set_field1_32(grid, field, weights, spline_type='B'):
         # Calculate what is the leftmost (reference) knot on the grid,
         # and the ratio between closest and second closest knot.
         # Note the +1 to correct for padding.
-        tmp = (<double>x / grid_xSpacing ) + 1
-        gx = <int>tmp
-        tx	= tmp - <double>gx
+        tmp = x / grid_xSpacing + 1
+        gx = int(tmp)
+        tx	= tmp - gx
         
         # Get coefficients
-        ccx = coeffx.get_coef(tx)
+        cubicsplinecoef_basis(tx, ccx)
         
         # Pre-normalize value
-        omsum = 0.0        
+        omsum = 0.0
         for i in range(4):
             omsum += ccx[i] * ccx[i]
         val_n = val / omsum
@@ -638,54 +578,37 @@ def _set_field1_32(grid, field, weights, spline_type='B'):
         # Following Lee et al. we update a numerator and a denumerator for
         # each knot.
         for i in range(4):
-            ii = i+gx-1
+            ii = i + gx - 1
             #
             omega = ccx[i]
             omega2 = weight * omega * omega
-            num_[ii] += omega2 * ( val_n*omega)
-            dnum_[ii] += omega2
+            num[ii] += omega2 * (val_n * omega)
+            dnum[ii] += omega2
     
     # Done
-    return num_, dnum_
+    return num, dnum
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def _set_field2_32(grid, field, weights, spline_type='B'):
+@numba.jit(nopython=True, nogil=True)
+def _set_field2(grid_sampling_in_pixels, knots, field, weights):
     
-    # Predefs
-    cdef int x, y, z, gx, gy, gz 
-    cdef double wx, wy, wz
-    cdef double tx, ty, tz
-    cdef int p, i, j, k, ii, jj, kk
-    cdef double *ccx, *ccy, *ccz
-    cdef double val, val_n, tmp, weight, omega, omega2, omsum
+    ccy = np.empty((4, ), np.float64)
+    ccx = np.empty((4, ), np.float64)
     
-    # Create and init cubic interpolator
-    cdef CoefLut lut = CoefLut.get_lut(spline_type)
-    cdef AccurateCoef coeffx = AccurateCoef(lut)
-    cdef AccurateCoef coeffy = AccurateCoef(lut)
-    
-    # Grid stuff
-    cdef double grid_ySpacing = grid.grid_sampling_in_pixels[0]
-    cdef double grid_xSpacing = grid.grid_sampling_in_pixels[1]
-    
-    # Cast input arrrays
-    cdef np.ndarray[FLOAT32_T, ndim=2] field_ = field
-    cdef np.ndarray[FLOAT32_T, ndim=2] weights_ = weights
+    grid_ySpacing = grid_sampling_in_pixels[0]
+    grid_xSpacing = grid_sampling_in_pixels[1]
     
     # Create temporary arrays the same size as the grid
-    cdef np.ndarray[GRID_T, ndim=2] num_ = np.zeros_like(grid.knots)
-    cdef np.ndarray[GRID_T, ndim=2] dnum_ = np.zeros_like(grid.knots)
-    
+    num = np.zeros_like(knots)
+    dnum = np.zeros_like(knots)
     
     # For each pixel ...    
-    for y in range(field_.shape[0]):
-        for x in range(field_.shape[1]):
+    for y in range(field.shape[0]):
+        for x in range(field.shape[1]):
             
             # Get val and alpha
-            val = field_[y, x]
-            weight = weights_[y, x]
+            val = field[y, x]
+            weight = weights[y, x]
             
             # Evaluate this one?
             if weight <= 0.0:
@@ -694,17 +617,17 @@ def _set_field2_32(grid, field, weights, spline_type='B'):
             # Calculate what is the leftmost (reference) knot on the grid,
             # and the ratio between closest and second closest knot.
             # Note the +1 to correct for padding.
-            tmp = (<double>y / grid_ySpacing ) + 1
-            gy = <int>tmp
-            ty	= tmp - <double>gy
+            tmp = y / grid_ySpacing + 1
+            gy = int(tmp)
+            ty	= tmp - gy
             #
-            tmp = (<double>x / grid_xSpacing ) + 1
-            gx = <int>tmp
-            tx	= tmp - <double>gx
+            tmp = x / grid_xSpacing + 1
+            gx = int(tmp)
+            tx	= tmp - gx
             
             # Get coefficients
-            ccy = coeffy.get_coef(ty)
-            ccx = coeffx.get_coef(tx)
+            cubicsplinecoef_basis(ty, ccy)
+            cubicsplinecoef_basis(tx, ccx)
             
             # Pre-normalize value
             omsum = 0.0
@@ -717,59 +640,42 @@ def _set_field2_32(grid, field, weights, spline_type='B'):
             # Following Lee et al. we update a numerator and a denumerator for
             # each knot.
             for j in range(4):
-                jj = j+gy-1
+                jj = j + gy - 1
                 for i in range(4):
-                    ii = i+gx-1
+                    ii = i + gx - 1
                     #
                     omega = ccy[j] * ccx[i]
                     omega2 = weight * omega * omega
-                    num_[jj,ii] += omega2 * ( val_n*omega)
-                    dnum_[jj,ii] += omega2
+                    num[jj,ii] += omega2 * ( val_n*omega)
+                    dnum[jj,ii] += omega2
     
     # Done
-    return num_, dnum_
+    return num, dnum
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def _set_field3_32(grid, field, weights, spline_type='B'):
+@numba.jit(nopython=True, nogil=True)
+def _set_field3(grid_sampling_in_pixels, knots, field, weights):
     
-    # Predefs
-    cdef int x, y, z, gx, gy, gz 
-    cdef double wx, wy, wz
-    cdef double tx, ty, tz
-    cdef int p, i, j, k, ii, jj, kk
-    cdef double *ccx, *ccy, *ccz
-    cdef double val, tmp, weight, omega, omega2, omsum
+    ccz = np.empty((4, ), np.float64)
+    ccy = np.empty((4, ), np.float64)
+    ccx = np.empty((4, ), np.float64)
     
-    # Create and init cubic interpolator
-    cdef CoefLut lut = CoefLut.get_lut(spline_type)
-    cdef AccurateCoef coeffx = AccurateCoef(lut)
-    cdef AccurateCoef coeffy = AccurateCoef(lut)
-    cdef AccurateCoef coeffz = AccurateCoef(lut)
-    
-    # Grid stuff
-    cdef double grid_zSpacing = grid.grid_sampling_in_pixels[0]
-    cdef double grid_ySpacing = grid.grid_sampling_in_pixels[1]
-    cdef double grid_xSpacing = grid.grid_sampling_in_pixels[2]
-    
-    # Cast input arrrays
-    cdef np.ndarray[FLOAT32_T, ndim=3] field_ = field
-    cdef np.ndarray[FLOAT32_T, ndim=3] weights_ = weights
+    grid_zSpacing = grid_sampling_in_pixels[0]
+    grid_ySpacing = grid_sampling_in_pixels[1]
+    grid_xSpacing = grid_sampling_in_pixels[2]
     
     # Create temporary arrays the same size as the grid
-    cdef np.ndarray[GRID_T, ndim=3] num_ = np.zeros_like(grid.knots)
-    cdef np.ndarray[GRID_T, ndim=3] dnum_ = np.zeros_like(grid.knots)
-    
+    num = np.zeros_like(knots)
+    dnum = np.zeros_like(knots)
     
     # For each pixel ...    
-    for z in range(field_.shape[0]):
-        for y in range(field_.shape[1]):
-            for x in range(field_.shape[2]):
+    for z in range(field.shape[0]):
+        for y in range(field.shape[1]):
+            for x in range(field.shape[2]):
                 
                 # Get val and alpha
-                val = field_[z, y, x]
-                weight = weights_[z, y, x]
+                val = field[z, y, x]
+                weight = weights[z, y, x]
                 
                 # Evaluate this one?
                 if weight <= 0.0:
@@ -778,22 +684,22 @@ def _set_field3_32(grid, field, weights, spline_type='B'):
                 # Calculate what is the leftmost (reference) knot on the grid,
                 # and the ratio between closest and second closest knot.
                 # Note the +1 to correct for padding.
-                tmp = (<double>z / grid_zSpacing ) + 1
-                gz = <int>tmp
-                tz	= tmp - <double>gz
+                tmp = z / grid_zSpacing + 1
+                gz = int(tmp)
+                tz	= tmp - gz
                 #
-                tmp = (<double>y / grid_ySpacing ) + 1
-                gy = <int>tmp
-                ty	= tmp - <double>gy
+                tmp = y / grid_ySpacing + 1
+                gy = int(tmp)
+                ty	= tmp - gy
                 #
-                tmp = (<double>x / grid_xSpacing ) + 1
-                gx = <int>tmp
-                tx	= tmp - <double>gx
+                tmp = x / grid_xSpacing + 1
+                gx = int(tmp)
+                tx	= tmp - gx
                 
                 # Get coefficients
-                ccz = coeffz.get_coef(tz)
-                ccy = coeffy.get_coef(ty)
-                ccx = coeffx.get_coef(tx)
+                cubicsplinecoef_basis(tz, ccz)
+                cubicsplinecoef_basis(ty, ccy)
+                cubicsplinecoef_basis(tx, ccx)
                 
                 # Pre-normalize value
                 omsum = 0.0
@@ -807,62 +713,46 @@ def _set_field3_32(grid, field, weights, spline_type='B'):
                 # Following Lee et al. we update a numerator and a denumerator for
                 # each knot.
                 for k in range(4):
-                    kk = k+gz-1
+                    kk = k + gz - 1
                     for j in range(4):
-                        jj = j+gy-1
+                        jj = j + gy - 1
                         for i in range(4):
-                            ii = i+gx-1
+                            ii = i + gx - 1
                             #
                             omega = ccz[k] * ccy[j] * ccx[i]
                             omega2 = weight * omega * omega
-                            num_[kk,jj,ii] += omega2 * ( val_n*omega)
-                            dnum_[kk,jj,ii] += omega2
+                            num[kk,jj,ii] += omega2 * ( val_n*omega)
+                            dnum[kk,jj,ii] += omega2
     
     # Done
-    return num_, dnum_
+    return num, dnum
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def _set_field_sparse1_32(grid, pp, values, spline_type='B'):
+@numba.jit(nopython=True, nogil=True)
+def _set_field_sparse1(grid_sampling, knots, pp, values):
     
-    # Predefs
-    cdef int x, y, z, gx, gy, gz 
-    cdef double wx, wy, wz
-    cdef double tx, ty, tz
-    cdef int p, i, j, k, ii, jj, kk
-    cdef double *ccx, *ccy, *ccz
-    cdef double val, tmp, weight, omega, omega2, omsum
+    ccx = np.empty((4, ), np.float64)
     
-    # Create and init cubic interpolator
-    cdef CoefLut lut = CoefLut.get_lut(spline_type)
-    cdef AccurateCoef coeffx = AccurateCoef(lut)
-    
-    # Grid stuff
-    cdef double wGridSampling = grid.grid_sampling
+    wGridSampling = grid_sampling
     
     # Create num, dnum 
-    cdef np.ndarray[GRID_T, ndim=1] num_ = np.zeros_like(grid.knots)
-    cdef np.ndarray[GRID_T, ndim=1] dnum_ = np.zeros_like(grid.knots)
-    
-    # Cast pointset
-    cdef np.ndarray[FLOAT32_T, ndim=2] pp_ = pp
-    
+    num = np.zeros_like(knots)
+    dnum = np.zeros_like(knots)
     
     # For each point ...
-    for p in range(pp_.shape[0]):
+    for p in range(pp.shape[0]):
         
         # Get wx
-        wx = pp_[p,0]
+        wx = pp[p, 0]
         
         # Calculate which is the closest point on the lattice to the top-left
         # corner and find ratio's of influence between lattice point.
-        tmp = (wx / wGridSampling ) + 1
-        gx = <int>tmp
-        tx	= tmp - <double>gx
+        tmp = wx / wGridSampling + 1
+        gx = int(tmp)
+        tx	= tmp - gx
         
         # Get coefficients
-        ccx = coeffx.get_coef(tx)
+        cubicsplinecoef_basis(tx, ccx)
         
         # Precalculate omsum
         omsum = 0.0        
@@ -880,63 +770,47 @@ def _set_field_sparse1_32(grid, pp, values, spline_type='B'):
             #
             omega = ccx[i]
             omega2 = omega*omega
-            num_[ii] += omega2 * ( val*omega/omsum )
-            dnum_[ii] += omega2
+            num[ii] += omega2 * ( val*omega/omsum )
+            dnum[ii] += omega2
             #
-            ii+=1
+            ii += 1
     
     # Done
-    return num_, dnum_
+    return num, dnum
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def _set_field_sparse2_32(grid, pp, values, spline_type='B'):
+@numba.jit(nopython=True, nogil=True)
+def _set_field_sparse2(grid_sampling, knots, pp, values):
     
-    # Predefs
-    cdef int x, y, z, gx, gy, gz 
-    cdef double wx, wy, wz
-    cdef double tx, ty, tz
-    cdef int p, i, j, k, ii, jj, kk
-    cdef double *ccx, *ccy, *ccz
-    cdef double val, tmp, weight, omega, omega2, omsum
+    ccy = np.empty((4, ), np.float64)
+    ccx = np.empty((4, ), np.float64)
     
-    # Create and init cubic interpolator
-    cdef CoefLut lut = CoefLut.get_lut(spline_type)
-    cdef AccurateCoef coeffx = AccurateCoef(lut)
-    cdef AccurateCoef coeffy = AccurateCoef(lut)
-    
-    # Grid stuff
-    cdef double wGridSampling = grid.grid_sampling
+    wGridSampling = grid_sampling
     
     # Create num, dnum 
-    cdef np.ndarray[GRID_T, ndim=2] num_ = np.zeros_like(grid.knots)
-    cdef np.ndarray[GRID_T, ndim=2] dnum_ = np.zeros_like(grid.knots)
-    
-    # Cast pointset
-    cdef np.ndarray[FLOAT32_T, ndim=2] pp_ = pp
-    
+    num = np.zeros_like(knots)
+    dnum = np.zeros_like(knots)
     
     # For each point ...
     for p in range(pp_.shape[0]):
         
         # Get wx and wy
-        wx = pp_[p,0]
-        wy = pp_[p,1]
+        wx = pp[p, 0]
+        wy = pp[p, 1]
         
         # Calculate which is the closest point on the lattice to the top-left
         # corner and find ratio's of influence between lattice point.
-        tmp = (wy / wGridSampling ) + 1
-        gy = <int>tmp
-        ty	= tmp - <double>gy
+        tmp = wy / wGridSampling + 1
+        gy = int(tmp)
+        ty	= tmp - gy
         #
-        tmp = (wx / wGridSampling ) + 1
-        gx = <int>tmp
-        tx	= tmp - <double>gx
+        tmp = wx / wGridSampling + 1
+        gx = int(tmp)
+        tx	= tmp - gx
         
         # Get coefficients
-        ccy = coeffy.get_coef(ty)
-        ccx = coeffx.get_coef(tx)
+        cubicsplinecoef_basis(ty, ccy)
+        cubicsplinecoef_basis(tx, ccx)
         
         # Precalculate omsum (denominator of eq 4 in Lee 1996)
         omsum = 0.0
@@ -957,71 +831,55 @@ def _set_field_sparse2_32(grid, pp, values, spline_type='B'):
                 #
                 omega = ccy[j] * ccx[i]
                 omega2 = omega*omega
-                num_[jj,ii] += omega2 * ( val*omega/omsum )
-                dnum_[jj,ii] += omega2
+                num[jj,ii] += omega2 * ( val*omega/omsum )
+                dnum[jj,ii] += omega2
                 #
-                ii+=1
-            jj+=1
+                ii += 1
+            jj += 1
     
     # Done
-    return num_, dnum_
+    return num, dnum
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def _set_field_sparse3_32(grid, pp, values, spline_type='B'):
+@numba.jit(nopython=True, nogil=True)
+def _set_field_sparse2(grid_sampling, knots, pp, values):
     
-    # Predefs
-    cdef int x, y, z, gx, gy, gz 
-    cdef double wx, wy, wz
-    cdef double tx, ty, tz
-    cdef int p, i, j, k, ii, jj, kk
-    cdef double *ccx, *ccy, *ccz
-    cdef double val, tmp, weight, omega, omega2, omsum
+    ccz = np.empty((4, ), np.float64)
+    ccy = np.empty((4, ), np.float64)
+    ccx = np.empty((4, ), np.float64)
     
-    # Create and init cubic interpolator
-    cdef CoefLut lut = CoefLut.get_lut(spline_type)
-    cdef AccurateCoef coeffx = AccurateCoef(lut)
-    cdef AccurateCoef coeffy = AccurateCoef(lut)
-    cdef AccurateCoef coeffz = AccurateCoef(lut)
-    
-    # Grid stuff
-    cdef double wGridSampling = grid.grid_sampling
+    wGridSampling = grid_sampling
     
     # Create num, dnum 
-    cdef np.ndarray[GRID_T, ndim=3] num_ = np.zeros_like(grid.knots)
-    cdef np.ndarray[GRID_T, ndim=3] dnum_ = np.zeros_like(grid.knots)
-    
-    # Cast pointset
-    cdef np.ndarray[FLOAT32_T, ndim=2] pp_ = pp
-    
+    num = np.zeros_like(knots)
+    dnum = np.zeros_like(knots)
     
     # For each point ...
-    for p in range(pp_.shape[0]):
+    for p in range(pp.shape[0]):
         
         # Get wx, wy and wz
-        wx = pp_[p,0]
-        wy = pp_[p,1]
-        wz = pp_[p,2]
+        wx = pp[p, 0]
+        wy = pp[p, 1]
+        wz = pp[p, 2]
         
         # Calculate which is the closest point on the lattice to the top-left
         # corner and find ratio's of influence between lattice point.
-        tmp = (wz / wGridSampling ) + 1
-        gz = <int>tmp
-        tz	= tmp - <double>gz
+        tmp = wz / wGridSampling + 1
+        gz = int(tmp)
+        tz	= tmp - gz
         #
-        tmp = (wy / wGridSampling ) + 1
-        gy = <int>tmp
-        ty	= tmp - <double>gy
+        tmp = wy / wGridSampling + 1
+        gy = int(tmp)
+        ty	= tmp - gy
         #
-        tmp = (wx / wGridSampling ) + 1
-        gx = <int>tmp
-        tx	= tmp - <double>gx
+        tmp = wx / wGridSampling + 1
+        gx = int(tmp)
+        tx	= tmp - gx
         
         # Get coefficients
-        ccz = coeffz.get_coef(tz)
-        ccy = coeffy.get_coef(ty)
-        ccx = coeffx.get_coef(tx)
+        cubicsplinecoef_basis(tz, ccz)
+        cubicsplinecoef_basis(ty, ccy)
+        cubicsplinecoef_basis(tx, ccx)
         
         # Precalculate omsum
         omsum = 0.0
@@ -1045,12 +903,12 @@ def _set_field_sparse3_32(grid, pp, values, spline_type='B'):
                     #
                     omega = ccy[j] * ccx[i]
                     omega2 = omega*omega
-                    num_[jj,ii] += omega2 * ( val*omega/omsum )
-                    dnum_[jj,ii] += omega2
+                    num[jj, ii] += omega2 * ( val*omega/omsum )
+                    dnum[jj, ii] += omega2
                     #
-                    ii+=1
-                jj+=1
-            kk+=1
+                    ii += 1
+                jj += 1
+            kk += 1
     
     # Done
-    return num_, dnum_
+    return nu_, dnum
