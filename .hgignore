@@ -7,4 +7,5 @@ syntax: glob
 *.c
 build/*
 dist/*
+__pycache__
 MANIFEST
