@@ -1,4 +1,5 @@
-""" Injectivity conditions for 2D and 3D B-spline grids.
+"""
+Injectivity conditions for 2D and 3D B-spline grids.
 
 In [1] the base technique for multilevel B-spline grids is given. In [2]
 the authors expand on this by introducing sufficient conditions (K2) to
@@ -55,5 +56,5 @@ A2 = ( _3o2**2 + (K2-_3o2)**2 )**0.5
 A3 = ( _3o2**2 + (K2-_3o2)**2 + (K3-K2)**2 )**0.5
 
 # Show
-print 'A2 =', A2
-print 'A3 =', A3
+print('A2 =', A2)
+print('A3 =', A3)

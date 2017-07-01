@@ -64,9 +64,9 @@ class Demo2D3:
         
         # Init visualization
         fig = vv.figure(1); vv.clf()
-        self._axes1 = axes1 = vv.subplot(131)
-        self._axes2 = axes2 = vv.subplot(132)
-        self._axes3 = axes3 = vv.subplot(133)
+        self._axes1 = axes1 = vv.subplot(131); vv.title('level factor 1.5')
+        self._axes2 = axes2 = vv.subplot(132); vv.title('level factor 2.0')
+        self._axes3 = axes3 = vv.subplot(133); vv.title('level factor 3.0')
         axes1.position.Correct(dy=40, dh=-40)
         axes2.position.Correct(dy=40, dh=-40)
         axes3.position.Correct(dy=40, dh=-40)
@@ -112,14 +112,11 @@ if __name__ == '__main__':
     import visvis as vv
     
     # Read image
-    im = vv.imread('lena.png')[:,:,1].astype(np.float32)
+    im = vv.imread('astronaut.png')[:,:,1].astype(np.float32)
     im = Aarray(im)[::2,:]
     
-#     im = Aarray((100,100), (0.3, 0.2), fill=0)
-#     im[50:55,:] = 1
-#     im[:,50:60] = 1
-    
     d = Demo2D3(im, 1.5)
+    vv.use().Run()
 
 if 0:
 

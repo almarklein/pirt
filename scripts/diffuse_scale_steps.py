@@ -1,3 +1,7 @@
+"""
+Illustate the levels in a scals space pyramid.
+"""
+
 import visvis as vv
 
 final_scale = 1.0
@@ -43,3 +47,5 @@ a = vv.gca()
 iters, scales = calc_scales(False); vv.plot(iters, scales, lc='b', mc='b', ms='.')
 iters, scales = calc_scales(True);  vv.plot(iters, scales, lc='g', mc='g', ms='.')
 a.axis.showGrid = True
+
+vv.use().Run()
