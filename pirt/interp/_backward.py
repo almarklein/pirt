@@ -3,7 +3,7 @@
 
 import numpy as np
 import numba
-from numba import cuda
+# from numba import cuda
 
 from ._cubic import spline_type_to_id, set_cubic_spline_coefs
 from ._cubic import cubicsplinecoef_catmullRom, cubicsplinecoef_cardinal, cubicsplinecoef_quadratic
@@ -577,7 +577,7 @@ def warp3(data_, result_, samplesx_, samplesy_, samplesz_, order, spline_id):
 # Atempt at Cuda implementation, but so far it is slower than the normal one.
 
 
-@cuda.jit((numba.float64, ), device=True, inline=True)
+# @cuda.jit((numba.float64, ), device=True, inline=True)
 def cuda_floor(i):
     if i >= 0:
         return int(i)
@@ -585,7 +585,7 @@ def cuda_floor(i):
         return int(i) - 1
 
 
-@cuda.jit
+# @cuda.jit
 def warp2_cuda(data_, result_, samplesx_, samplesy_, order, spline_type):
     
     Ni = samplesx_.size

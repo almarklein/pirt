@@ -49,6 +49,7 @@ def meshgrid(*args):
     return tuple(reversed(res))
 
 
+# todo: this seems not to be used anymore
 @numba.jit
 def uglyRoot(n):
     """ uglyRoot(n)
@@ -56,8 +57,9 @@ def uglyRoot(n):
     (a few) Newton iterations.
     """
     x = 1.0    
-    for iter in range(3):
-        x = x - (x * x - n) / (2.0 * x)
+    x = x - (x * x - n) / (2.0 * x)
+    x = x - (x * x - n) / (2.0 * x)
+    x = x - (x * x - n) / (2.0 * x)
     return x
 
 

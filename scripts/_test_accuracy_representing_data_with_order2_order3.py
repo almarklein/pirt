@@ -55,8 +55,8 @@ def get_errors(sigma, factor, verbose=True, N=100000):
         # todo: show with boxplots?
         errors.append(perr)
         if verbose:
-            print ' factor %i, %s: %1.5f%% (%1.0f ms)' % (
-                    factors[i], interps[i], float(perr), times[i]*1000.0 )
+            print(' factor %i, %s: %1.5f%% (%1.0f ms)' % (
+                    factors[i], interps[i], float(perr), times[i]*1000.0 ))
     
     if verbose:
         vv.figure(1); vv.clf()

@@ -1,10 +1,12 @@
 """ Example how to deform an image. """
 import visvis as vv
 import pirt
+from pirt.apps.deform_by_hand import DeformByHand
+
 
 im1 = vv.imread('lena.png')[:,:,1].astype('float32') / 255
 
-d = pirt.DeformByHand(im1, 30)
+d = DeformByHand(im1, 30)
 d.run()
 im2 = d.field.apply_deformation(im1)
 
@@ -28,4 +30,6 @@ a5 = vv.subplot(235); vv.imshow(im5)
 a6 = vv.subplot(236); vv.imshow(im6)
 
 for a in [a1, a2, a3, a5, a6]:
-    a.axis.visible = False    
+    a.axis.visible = False
+
+vv.use().Run()

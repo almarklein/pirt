@@ -3,11 +3,12 @@ from __future__ import absolute_import, print_function, division
 
 import numpy as np
 
-from . import Aarray, diffuse
+from ..gaussfun import diffuse
+from ..utils import Aarray
 
 from ._backward import warp, awarp
 from ._forward import project, aproject
-from ._misc import make_samples_absolute, meshgrid, uglyRoot
+from ._misc import make_samples_absolute, meshgrid
 
 
 ## Deformations
@@ -22,6 +23,9 @@ def deform_backward(data, deltas, order=1, spline_type=0.0):
     expressed in world coordinates.
     
     """
+    
+    # todo: this function assumes that the shape and sampling of data and deltas is equal.
+    # Either document, enforce, or fix that (e.g. by using awarp when needed?)
     
     # Check
     if len(deltas) != data.ndim:
@@ -293,5 +297,3 @@ def imzoom(data, factor, order=3):
     
     """
     return zoom(data, factor, order, 0.0, True, True)
-
-
