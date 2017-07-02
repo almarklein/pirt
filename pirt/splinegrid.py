@@ -17,7 +17,7 @@ import numpy as np
 import pirt
 from pirt.utils import Point, Pointset, Aarray
 
-# todo: from . import splinegrid_  --> numba-ify
+from . import _splinegrid
 
 
 ## Helper classes and functions
@@ -26,7 +26,7 @@ from pirt.utils import Point, Pointset, Aarray
 class FieldDescription:
     """ FieldDescription(*args)
     
-    Describes the dimensions of a field (read Aarray). It stores
+    Describes the dimensions of a field (i.e. Aarray). It stores
     the following properties:
       * shape
       * sampling
@@ -184,7 +184,7 @@ def _calculate_multiscale_sampling(grid, sampling):
 
 
 class GridInterface:
-    """ GridInterface(field, sampling=5, spline_type='B')
+    """ GridInterface(field, sampling=5)
     
     Abstract class to define the interface of a spline grid.
     Implemented by the Grid and GridContainer classes.
@@ -203,20 +203,16 @@ class GridInterface:
     sampling : number
         The spacing of the knots in the field. (For anisotropic fields,
         the spacing is expressed in world units.)
-    spline_type : (optional) {'B', 'Cardinal', 'linear'}
-        The type of spline to use for the grid. The default (B-spline)
-        is really the only one that makes sense (try it, you'll see).
     
     """
     
-    def __init__(self, field, sampling, spline_type='B'):
+    def __init__(self, field, sampling):
         
         # Sets:
         # * _field_shape
         # * _field_sampling
         # * _grid_shape
         # * _grid_sampling
-        # * _spline_type
         
         # Check field
         if isinstance(field, FieldDescription):
@@ -249,10 +245,6 @@ class GridInterface:
             max_field_index = self._field_shape[d]-1
             tmp = int(max_field_index / grid_sampling_in_pixels[d]) + 1 + 3
             self._grid_shape.append(tmp)
-        
-        # Store spline type
-        self._spline_type = spline_type
-    
     
     ## Dimensions of field and grid
     
@@ -305,7 +297,7 @@ class GridInterface:
         
         # Get new grid
         fd = FieldDescription(self)
-        newGrid = self.__class__(fd, self.grid_sampling, self._spline_type)
+        newGrid = self.__class__(fd, self.grid_sampling)
         
         if isinstance(self, GridContainer):
             # Copy all subgrids
@@ -331,7 +323,7 @@ class GridInterface:
         # Create new grid
         newSampling = self.grid_sampling / 2.0
         fieldDes = FieldDescription(self)
-        newGrid = self.__class__(fieldDes, newSampling, self._spline_type)
+        newGrid = self.__class__(fieldDes, newSampling)
         
         if isinstance(self, GridContainer):
             # Refine each of the subgrids and put in newGrid
@@ -376,7 +368,7 @@ class GridInterface:
         
         # Create empty grid with same shape as the other grid.
         fd = FieldDescription(self)
-        newGrid = self.__class__(fd, self.grid_sampling, self._spline_type)
+        newGrid = self.__class__(fd, self.grid_sampling)
         
         if isinstance(self, GridContainer):
             # Add each of the subgrids and put in newGrid
@@ -416,7 +408,7 @@ class GridInterface:
 #         # Create empty grid with same shape as the other grid.
 #         if result_grid is None:
 #             fd = FieldDescription(self)
-#             newGrid = self.__class__(fd, self.grid_sampling, self._spline_type)
+#             newGrid = self.__class__(fd, self.grid_sampling)
 #         else:
 #             newGrid = result_grid
 #         
@@ -425,7 +417,7 @@ class GridInterface:
 #             newGrid._map('compose', self, other_grid)
 #         elif isinstance(self, SplineGrid):
 #             # Fill the new grid
-#             splinegrid_.get_field_grid(self, newGrid, self._spline_type)
+#             _splinegrid.get_field_grid(self, newGrid)
 #             # Add delta to given grid
 #             newGrid._knots += other_grid.knots
 #         else:
@@ -453,7 +445,7 @@ class GridInterface:
         fd = FieldDescription(new_shape)
         
         # Create new grid
-        newGrid = self.__class__(fd, self.grid_sampling, self._spline_type)
+        newGrid = self.__class__(fd, self.grid_sampling)
         
         if isinstance(self, GridContainer):
             # reshape all subgrids
@@ -472,8 +464,8 @@ class GridInterface:
     
     
     @classmethod
-    def _multiscale(cls, setResidu, getResidu, field, sampling, spline_type):
-        """ _multiscale(setResidu, getResidu, field, sampling, spline_type)
+    def _multiscale(cls, setResidu, getResidu, field, sampling):
+        """ _multiscale(setResidu, getResidu, field, sampling)
         
         General method for multiscale grid formation. from_field_multiscale()
         and from_points_multiscale() use this classmethod by each supplying 
@@ -490,13 +482,10 @@ class GridInterface:
         s, sRef = sMax, sMin*0.9
         
         # Init refined grid (starts with highest sampling)
-        grid = GridClass(field, s, spline_type=spline_type)
+        grid = GridClass(field, s)
         
         # Init residu
         residu = getResidu()
-        
-        # Short name
-        ST = spline_type
         
         # grid: working grid
         # gridRef: refined grid
@@ -505,7 +494,7 @@ class GridInterface:
         while s > sRef:
             
             # Create addGrid using the residual values
-            gridAdd = GridClass(field, s, spline_type=ST)        
+            gridAdd = GridClass(field, s)        
             setResidu(gridAdd, residu)
             
             # Create grid by combining refined grid of previous pass and
@@ -531,7 +520,7 @@ class GridInterface:
 
 
 class GridContainer(GridInterface):
-    """ GridContainer(field, sampling=5, spline_type='B')
+    """ GridContainer(field, sampling=5)
     
     Abstract base class that represents multiple SplineGrid instances.
     Since each SplineGrid instance describes a field of scalar values,
@@ -600,17 +589,19 @@ class GridContainer(GridInterface):
 
 
 class SplineGrid(GridInterface):
-    """ SplineGrid(field, sampling=5, spline_type='B')
+    """ SplineGrid(field, sampling=5)
     
     A SplineGrid is a representation of a scalar field in N 
     dimensions. This field is represented in a sparse way using 
     knots, which are distributed in a uniform grid.
     
     The manner in which these knots describe the field depends
-    on the underlying spline being used. The default is a Cubic 
+    on the underlying spline being used, which is a Cubic 
     B-spline. This spline adopts a shape corresponding to minimum
     bending energy, which makes them the preferred choice for many 
-    interpolation tasks.
+    interpolation tasks. (Earlier versions of Pirt allowed setting the
+    spline types, but to make things easier, and because the B-spline is
+    the only sensible choice, this option was removed.)
     
     Parameters
     ----------
@@ -621,8 +612,6 @@ class SplineGrid(GridInterface):
     sampling : number
         The spacing of the knots in the field. (For anisotropic fields,
         the spacing is expressed in world units.)
-    spline_type : (optional) {'B', 'Cardinal', 'linear'}
-        The type of spline to use for the grid. The default is B-spline.
     
     Usage
     -----
@@ -702,7 +691,7 @@ class SplineGrid(GridInterface):
         Obtain the full field that this grid represents. 
         
         """
-        field = splinegrid_.get_field(self, self._spline_type)
+        field = _splinegrid.get_field(self)
         return Aarray(field, self.field_sampling)
     
     
@@ -717,16 +706,14 @@ class SplineGrid(GridInterface):
         pp, tmp = self._select_points_inside_field(pp)
         
         # Sample field
-        return splinegrid_.get_field_sparse(self, pp.data, self._spline_type)
+        return _splinegrid.get_field_sparse(self, pp.data)
     
     
     ## Classmethods to get a grid
     
     @classmethod    
-    def from_field(cls, field, sampling, weights=None, multi_scale=True,
-                spline_type='B'):
-        """ from_field(field, sampling, weights=None, multi_scale=True,
-                spline_type='B')
+    def from_field(cls, field, sampling, weights=None, multi_scale=True):
+        """ from_field(field, sampling, weights=None, multi_scale=True)
         
         Create a SplineGrid from a given field. Note that the smoothness 
         of the grid and the extent to which the grid follows the given values. 
@@ -746,18 +733,16 @@ class SplineGrid(GridInterface):
         weights : (optional) numpy array
             This array can be used to weigh the contributions of the 
             individual elements.
-        spline_type : {'B', 'Cardinal', 'linear'}
-            The type of spline to use. The default is B-spline.
         
         """
-        grid = SplineGrid(field, sampling, spline_type)
+        grid = SplineGrid(field, sampling)
         grid._set_using_field(field, weights)
         return grid
     
     
     @classmethod    
-    def from_field_multiscale(cls, field, sampling, weights=None, spline_type='B'):
-        """ from_field_multiscale(field, sampling, weights=None, spline_type='B')
+    def from_field_multiscale(cls, field, sampling, weights=None):
+        """ from_field_multiscale(field, sampling, weights=None)
         
         Create a SplineGrid from the given field. By performing a 
         multi-scale approach the grid adopts a minimal bending to 
@@ -777,8 +762,6 @@ class SplineGrid(GridInterface):
         weights : (optional) numpy array
             This array can be used to weigh the contributions of the 
             individual elements.
-        spline_type : {'B', 'Cardinal', 'linear'}
-            The type of spline to use. The default is B-spline.
         
         Notes
         -----
@@ -798,12 +781,12 @@ class SplineGrid(GridInterface):
             else:
                 return field - gridRef.get_field()
         
-        return cls._multiscale(setR, getR, field, sampling, spline_type)
+        return cls._multiscale(setR, getR, field, sampling)
     
     
     @classmethod    
-    def from_points(cls, field, sampling, pp, values, spline_type='B'):
-        """ from_points(field, sampling, pp, values, spline_type='B')
+    def from_points(cls, field, sampling, pp, values):
+        """ from_points(field, sampling, pp, values)
         
         Create a SplineGrid from the values specified at a set of 
         points. Note that the smoothness of the grid and the extent to 
@@ -820,18 +803,16 @@ class SplineGrid(GridInterface):
             The positions (in world coordinates) at which the values are given.
         values : list or numpy array
             The values specified at the given positions.
-        spline_type : {'B', 'Cardinal', 'linear'}
-            The type of spline to use. The B-spline is the most sensible choice.
         
         """
-        grid = SplineGrid(field, sampling, spline_type)
+        grid = SplineGrid(field, sampling)
         grid._set_using_points(pp, values)
         return grid
     
     
     @classmethod    
-    def from_points_multiscale(cls, field, sampling, pp, values, spline_type='B'):
-        """ from_points_multiscale(field, sampling, pp, values, spline_type='B')
+    def from_points_multiscale(cls, field, sampling, pp, values):
+        """ from_points_multiscale(field, sampling, pp, values)
         
         Create a SplineGrid from the values specified at a set of 
         points. By performing a multi-scale approach the grid adopts a 
@@ -847,8 +828,6 @@ class SplineGrid(GridInterface):
             The positions (in world coordinates) at which the values are given.
         values : list or numpy array
             The values specified at the given positions.
-        spline_type : {'B', 'Cardinal', 'linear'}
-            The type of spline to use. The B-spline is the most sensible choice.
         
         Notes
         -----
@@ -868,7 +847,7 @@ class SplineGrid(GridInterface):
             else:
                 return values - gridRef.get_field_in_points(pp)
         
-        return cls._multiscale(setR, getR, field, sampling, spline_type)
+        return cls._multiscale(setR, getR, field, sampling)
     
     
     ## Private methods to help getting/setting the grid
@@ -921,7 +900,7 @@ class SplineGrid(GridInterface):
             weights = np.ones_like(field)
         
         # Go
-        splinegrid_.set_field(self, field, weights, self._spline_type)
+        _splinegrid.set_field(self, field, weights)
     
     
     def _set_using_points(self, pp, values):
@@ -939,7 +918,7 @@ class SplineGrid(GridInterface):
         pp, values = self._select_points_inside_field(pp, values)
         
         # Go
-        splinegrid_.set_field_sparse(self, pp.data, values, self._spline_type)
+        _splinegrid.set_field_sparse(self, pp.data, values)
     
     
     def _refine(self, knots):
