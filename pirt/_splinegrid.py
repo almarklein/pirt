@@ -901,10 +901,10 @@ def _set_field_sparse3(grid_sampling, knots, pp, values):
                 ii = gx - 1  # x-location of first knot
                 for i in range(4):
                     #
-                    omega = ccy[j] * ccx[i]
+                    omega = ccz[k] * ccy[j] * ccx[i]
                     omega2 = omega*omega
-                    num[jj, ii] += omega2 * ( val*omega/omsum )
-                    dnum[jj, ii] += omega2
+                    num[kk, jj, ii] += omega2 * ( val*omega/omsum )
+                    dnum[kk, jj, ii] += omega2
                     #
                     ii += 1
                 jj += 1
