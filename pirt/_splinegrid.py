@@ -83,11 +83,11 @@ def get_field_sparse(grid, pp):
     
     # Decide what function to call
     if grid.ndim == 1:
-        _get_field_at1(result.ravel(), grid_sampling_in_pixels, knots, *[s.ravel() for s in samples])
+        _get_field_at1(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
     elif grid.ndim == 2: 
-        _get_field_at2(result.ravel(), grid_sampling_in_pixels, knots, *[s.ravel() for s in samples])
+        _get_field_at2(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
     elif grid.ndim == 3: 
-        _get_field_at3(result.ravel(), grid_sampling_in_pixels, knots, *[s.ravel() for s in samples])
+        _get_field_at3(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
     else:
         tmp = 'Grid interpolation not suported for this dimension.'
         raise RuntimeError(tmp)
@@ -145,7 +145,7 @@ def get_field_at(grid, samples):
 @numba.jit(nopython=True, nogil=True)
 def _get_field1(result, grid_sampling_in_pixels, knots):
     
-    if len(result.ndim) != 1:
+    if result.ndim != 1:
         raise ValueError('This function can only sample 1D grids.')
     
     ccx = np.empty((4, ), np.float64)
@@ -182,7 +182,7 @@ def _get_field1(result, grid_sampling_in_pixels, knots):
 @numba.jit(nopython=True, nogil=True)
 def _get_field2(result, grid_sampling_in_pixels, knots):
     
-    if len(result.ndim) != 2:
+    if result.ndim != 2:
         raise ValueError('This function can only sample 2D grids.')
     
     ccy = np.empty((4, ), np.float64)
@@ -231,7 +231,7 @@ def _get_field2(result, grid_sampling_in_pixels, knots):
 @numba.jit(nopython=True, nogil=True)
 def _get_field3(result, grid_sampling_in_pixels, knots):
     
-    if len(result.ndim) != 3:
+    if result.ndim != 3:
         raise ValueError('This function can only sample 3D grids.')
     
     ccz = np.empty((4, ), np.float64)
@@ -435,7 +435,7 @@ def _get_field_at3(result_, grid_sampling_in_pixels, knots, samplesx_, samplesy_
         gx = int(tmp)
         tx	= tmp - gx
         
-         # Check if within bounds of interpolatable domain
+        # Check if within bounds of interpolatable domain
         if (    (gx < 1 or gx >= gridShapex - 2) or
                 (gy < 1 or gy >= gridShapey - 2) or
                 (gz < 1 or gz >= gridShapez - 2)):
@@ -473,7 +473,7 @@ def _get_field_at3(result_, grid_sampling_in_pixels, knots, samplesx_, samplesy_
 @numba.jit(nopython=True, nogil=True)
 def _set_field_using_num_and_dnum(knots_, num_, dnum_):
     
-    for i in range(knots.size):
+    for i in range(knots_.size):
         n = dnum_[i]
         if n > 0.0:
             knots_[i] = num_[i] / n
@@ -520,11 +520,11 @@ def set_field_sparse(grid, pp, values):
     
     # Apply proper function
     if grid.ndim == 1:
-        num, dnum = _set_field_sparse1(grid.grid_sampling, grid.knots, pp, value)
+        num, dnum = _set_field_sparse1(grid.grid_sampling, grid.knots, pp, values)
     elif grid.ndim == 2:
-        num, dnum = _set_field_sparse2(grid.grid_sampling, grid.knots, pp, value)
+        num, dnum = _set_field_sparse2(grid.grid_sampling, grid.knots, pp, values)
     elif grid.ndim == 3:
-        num, dnum = _set_field_sparse3(grid.grid_sampling, grid.knots, pp, value)
+        num, dnum = _set_field_sparse3(grid.grid_sampling, grid.knots, pp, values)
     else:
         tmp = 'This method does not support grids of that dimension.'
         raise RuntimeError(tmp)
@@ -646,7 +646,7 @@ def _set_field2(grid_sampling_in_pixels, knots, field, weights):
                     #
                     omega = ccy[j] * ccx[i]
                     omega2 = weight * omega * omega
-                    num[jj,ii] += omega2 * ( val_n*omega)
+                    num[jj,ii] += omega2 * ( val_n*omega )
                     dnum[jj,ii] += omega2
     
     # Done
@@ -721,7 +721,7 @@ def _set_field3(grid_sampling_in_pixels, knots, field, weights):
                             #
                             omega = ccz[k] * ccy[j] * ccx[i]
                             omega2 = weight * omega * omega
-                            num[kk,jj,ii] += omega2 * ( val_n*omega)
+                            num[kk,jj,ii] += omega2 * ( val_n*omega )
                             dnum[kk,jj,ii] += omega2
     
     # Done
@@ -792,7 +792,7 @@ def _set_field_sparse2(grid_sampling, knots, pp, values):
     dnum = np.zeros_like(knots)
     
     # For each point ...
-    for p in range(pp_.shape[0]):
+    for p in range(pp.shape[0]):
         
         # Get wx and wy
         wx = pp[p, 0]
@@ -831,8 +831,8 @@ def _set_field_sparse2(grid_sampling, knots, pp, values):
                 #
                 omega = ccy[j] * ccx[i]
                 omega2 = omega*omega
-                num[jj,ii] += omega2 * ( val*omega/omsum )
-                dnum[jj,ii] += omega2
+                num[jj, ii] += omega2 * ( val*omega/omsum )
+                dnum[jj, ii] += omega2
                 #
                 ii += 1
             jj += 1
@@ -842,7 +842,7 @@ def _set_field_sparse2(grid_sampling, knots, pp, values):
 
 
 @numba.jit(nopython=True, nogil=True)
-def _set_field_sparse2(grid_sampling, knots, pp, values):
+def _set_field_sparse3(grid_sampling, knots, pp, values):
     
     ccz = np.empty((4, ), np.float64)
     ccy = np.empty((4, ), np.float64)
@@ -911,4 +911,4 @@ def _set_field_sparse2(grid_sampling, knots, pp, values):
             kk += 1
     
     # Done
-    return nu_, dnum
+    return num, dnum

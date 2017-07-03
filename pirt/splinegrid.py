@@ -283,7 +283,7 @@ class GridInterface:
     def grid_sampling_in_pixels(self):
         """ For each dim, the spacing (in sub-pixels) between the knots.
         """
-        return [self._grid_sampling/float(i) for i in self._field_sampling]
+        return tuple([self._grid_sampling/float(i) for i in self._field_sampling])
     
     
     ## Methods to obtain derived grids
@@ -712,8 +712,8 @@ class SplineGrid(GridInterface):
     ## Classmethods to get a grid
     
     @classmethod    
-    def from_field(cls, field, sampling, weights=None, multi_scale=True):
-        """ from_field(field, sampling, weights=None, multi_scale=True)
+    def from_field(cls, field, sampling, weights=None):
+        """ from_field(field, sampling, weights=None)
         
         Create a SplineGrid from a given field. Note that the smoothness 
         of the grid and the extent to which the grid follows the given values. 
