@@ -893,7 +893,7 @@ def _set_field_sparse3(grid_sampling, knots, pp, values):
         
         # For each knot that this point influences
         # Following Lee et al. we update a numerator and a denumerator for
-        # each knot.
+        # each knot. 
         kk = gz -1  # z-location of first knot
         for k in range(4):
             jj = gy - 1  # y-location of first knot
