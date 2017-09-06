@@ -18,13 +18,6 @@ from numpy import pi, sin
 
 from .interp._cubic import cubicsplinecoef_basis
 
-# # Type defs, we support float32 and float64
-# ctypedef np.float64_t GRID_T
-# FLOAT32 = np.float32
-# FLOAT64 = np.float64
-# SAMPLE = np.float32
-# GRID = np.float64
-
 
 ## Functions to obtain the field that the grid represents
 
