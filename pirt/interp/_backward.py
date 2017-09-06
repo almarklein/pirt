@@ -29,7 +29,7 @@ def warp(data, samples, order=1, spline_type=0.0):
         Data to interpolate, can be 1D, 2D or 3D.
     samples : tuple with numpy arrays
         Each array specifies the sample position for one dimension (in 
-        x-y-z order). 
+        x-y-z order). Can also be a stacked array as in skimage's warp().
     order : integer or string
         Order of interpolation. Can be 0:'nearest', 1:'linear', 2: 'quadratic',
         3:'cubic'. 
@@ -79,10 +79,13 @@ def warp(data, samples, order=1, spline_type=0.0):
         pass
     elif isinstance(samples, list):
         samples = tuple(samples)
-    elif data.ndim==1:
+    elif isinstance(samples, np.ndarray) and samples.shape[0] == data.ndim:
+        samples = tuple(reversed([samples[i] for i in range(samples.shape[0])]))  # skimage API
+    elif data.ndim == 1:
         samples = (samples,)
     else:
-        raise ValueError("samples must be a tuple of arrays.")
+        raise ValueError("samples must be a tuple of arrays, or an ndim*X array.")
+    
     if len(samples) != data.ndim:
         tmp = "samples must contain as many arrays as data has dimensions."
         raise ValueError(tmp)
