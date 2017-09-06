@@ -262,8 +262,8 @@ class GridInterface:
     
     @property
     def field_sampling(self):
-        """ For each dim, the sampling (distance between pixels/voxels) 
-        of the field (all 1's if isotropic).
+        """ For each dim, the sampling of the field, i.e. the distance
+        (in world units) between pixels/voxels (all 1's if isotropic).
         """
         return tuple(self._field_sampling)
     
@@ -282,6 +282,9 @@ class GridInterface:
     @property
     def grid_sampling_in_pixels(self):
         """ For each dim, the spacing (in sub-pixels) between the knots.
+        A dimension that has a low field sampling will have a high grid
+        sampling in pixels (since the pixels are small, more fit between
+        two knots).
         """
         return tuple([self._grid_sampling/float(i) for i in self._field_sampling])
     
