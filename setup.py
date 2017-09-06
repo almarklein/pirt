@@ -8,9 +8,6 @@ from distutils.extension import Extension
 from numpy.distutils.misc_util import get_numpy_include_dirs
 
 
-USE_CYTHON = True
-ext = '.pyx' if USE_CYTHON else '.c'
-
 name = 'pirt'
 description = 'Python Image Registration Toolkit'
 
@@ -30,23 +27,6 @@ for line in open(initFile).readlines():
             docStatus = 2
     if docStatus == 1:
         __doc__ += line
-
-# Define extensions
-extensions = [
-                Extension("pirt.interp.interpolation_", 
-                    sources=["pirt/interp/interpolation_"+ext],
-                    include_dirs=get_numpy_include_dirs()
-                    ),
-                Extension("pirt.splinegrid_", 
-                    sources=["pirt/splinegrid_"+ext],
-                    include_dirs=get_numpy_include_dirs()
-                    ),
-             ]
-
-# Compile with Cython
-if USE_CYTHON:
-    from Cython.Build import cythonize
-    extensions = cythonize(extensions)
 
 
 setup(
@@ -73,8 +53,6 @@ setup(
                 'pirt.apps',
                ],
     package_dir = {'pirt': 'pirt'},
-    
-    ext_modules = extensions,
     
     package_data = {'pirt': ['*.pyx', '*.pxd', '*.c'],
                     'pirt.interp': ['*.pyx', '*.pxd', '*.c']

@@ -21,12 +21,7 @@ from pirt.utils import Point, Pointset, Aarray
 from pirt import interp
 from pirt.splinegrid import GridInterface, SplineGrid, FD
 
-# Import Cython part
 from . import splinegrid
-# todo: from . import splinegrid_
-
-
-# todo: cython templates (maybe already exists?
 
 
 class Deformation(object):

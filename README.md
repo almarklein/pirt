@@ -6,7 +6,7 @@ Introduction
 Pirt provides functionality for image registration. It is the result
 of my PhD. There is functionality for a variety of image registration
 algorothms. Most notably pirt provides an easy way to use the Elastix
-toolkit. Further it implements some algorithms in Cython (Demons and
+toolkit. Further it implements some algorithms in Numba (Demons and
 Gravity).
 
 Image registration itself requires several image processing techniques
@@ -26,20 +26,16 @@ The registration algoriths are in `pirt.reg`.
 Dependencies and installation
 -----------------------------
 
-Pirt runtime dependencies:
+Pirt dependencies:
 
   * numpy
   * scipy
+  * numba
   * visvis (for now)
-
-Build dependencies:
-
-  * Cython
-  * A working C compiler
 
 To install:
 
-  * `pip install pirt`  (need Cython)
+  * `pip install pirt`
   * `conda install pirt -c pyzo` (probably Windows only)
 
 

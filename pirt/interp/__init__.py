@@ -1,6 +1,6 @@
 """ Module interp
 
-Exposes several functions for interpolation, implemented in Cython.
+Exposes several functions for interpolation, implemented in Numba.
 This code is part of pirt, but written to be easily made stand-alone,
 or be made a subpackage of another package.
 

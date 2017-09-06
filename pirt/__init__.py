@@ -3,7 +3,7 @@
 Pirt provides functionality for image registration. There is
 functionality for a variety of image registration algorithms. Most
 notably pirt provides an easy way to use the Elastix toolkit. Further
-it implements some algorithms in Cython (Demons and Gravity).
+it implements some algorithms in Numba (Demons and Gravity).
 
 Image registration itself requires several image processing techniques
 and data types, which are also included in this package:
