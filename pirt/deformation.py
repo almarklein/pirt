@@ -19,9 +19,9 @@ import visvis as vv
 import pirt
 from pirt.utils import Point, Pointset, Aarray
 from pirt import interp
-from pirt.splinegrid import GridInterface, SplineGrid, FD
-
-from . import splinegrid
+from pirt.splinegrid import GridInterface, GridContainer, SplineGrid, FD
+from pirt.splinegrid import _calculate_multiscale_sampling
+from pirt import _splinegrid
 
 
 class Deformation(object):
@@ -44,6 +44,8 @@ class Deformation(object):
     def forward_mapping(self):
         """ Returns True if this deformation is forward mapping. 
         """
+        assert self._forward_mapping is not None, ("You're using an abstract "
+            "deformation class (but must be forward or backward)")
         return self._forward_mapping
     
     @property
@@ -271,10 +273,10 @@ class Deformation(object):
         
         if def1.is_identity:
             # That's easy
-            return def2.copy()
+            return def2.copy().as_deformation_field()
         elif def2.is_identity:
             # That's easy
-            return def1.copy()
+            return def1.copy().as_deformation_field()
         
         else:
             # Apply normally
@@ -311,7 +313,7 @@ class Deformation(object):
             for d in range(def1.ndim):
                 field1 = def1[d]
                 grid2 = def2[d]
-                field = splinegrid_.get_field_at(grid2, sampleLocations)
+                field = _splinegrid.get_field_at(grid2, sampleLocations)
                 field = pirt.Aarray(field1+field, def1.field_sampling)
                 fields.append(field)
         elif isinstance(def2, DeformationField):
@@ -371,9 +373,8 @@ class Deformation(object):
             raise ValueError('Unknown deformation class.')
     
     
-    # todo: does now only work for DeformationField
     def get_field_in_points(self, pp, d, interpolation=1):
-        """ get_field_in_points(pp, d interpolation=1)
+        """ get_field_in_points(pp, d, interpolation=1)
         
         Obtain the field for dimension d in the specied points. 
         The interpolation value is used only if this is a deformation
@@ -427,10 +428,10 @@ class Deformation(object):
         t0 = time.time()
         if self.forward_mapping:
             result = pirt.interp.deform_forward(data, samples)
-#             print 'forward deformation took %1.3f seconds' % (time.time()-t0)
+            # print 'forward deformation took %1.3f seconds' % (time.time()-t0)
         else:
             result = pirt.interp.deform_backward(data, samples, interpolation)
-#             print 'backward deformation took %1.3f seconds' % (time.time()-t0)
+            # print 'backward deformation took %1.3f seconds' % (time.time()-t0)
         
         # Make Aarray and return
         result = Aarray(result, deform.field_sampling)
@@ -639,8 +640,8 @@ class Deformation(object):
 
 
 
-class DeformationGrid(Deformation, splinegrid.GridContainer):
-    """ DeformationGrid(field, sampling=5, spline_type='B')
+class DeformationGrid(Deformation, GridContainer):
+    """ DeformationGrid(field, sampling=5)
    
     A deformation grid represents a deformation using a spline grid. 
     
@@ -657,9 +658,6 @@ class DeformationGrid(Deformation, splinegrid.GridContainer):
     sampling : number
         The spacing of the knots in the field. (For anisotropic fields,
         the spacing is expressed in world units.)
-    spline_type : (optional) {'B', 'Cardinal', 'linear'}
-        The type of spline to use for the grid. The default (B-spline)
-        is really the only one that makes sense (try it, you'll see).
     
     Usage
     -----
@@ -675,7 +673,7 @@ class DeformationGrid(Deformation, splinegrid.GridContainer):
     """
     
     def __init__(self, *args, **kwargs):
-        splinegrid.GridContainer.__init__(self, *args, **kwargs)
+        GridContainer.__init__(self, *args, **kwargs)
         
         # Create sub grids
         for d in range(self.ndim):
@@ -708,10 +706,10 @@ class DeformationGrid(Deformation, splinegrid.GridContainer):
             # Get points for all knots
             pp = Pointset(2)
             for gy in range(self.grid_shape[0]):
-                for gx in range(self.grid_shape[0]):
-                    x = (gx-1)* self.grid_sampling
-                    y = (gy-1)* self.grid_sampling
-                    pp.append(x,y)
+                for gx in range(self.grid_shape[1]):
+                    x = (gx-1) * self.grid_sampling
+                    y = (gy-1) * self.grid_sampling
+                    pp.append(x, y)
         
             # Draw
             vv.plot(pp, ms='.', mc='g', ls='', axes=axes, axesAdjust=0)
@@ -724,9 +722,9 @@ class DeformationGrid(Deformation, splinegrid.GridContainer):
     
     @classmethod        
     def from_field(cls, field, sampling, weights=None, 
-                            injective=True, frozenedge=True, spline_type='B'):
-        """ from_field(field, sampling, weights=None, 
-                                            injective=True, frozenedge=True)
+                   injective=True, frozenedge=True, fd=None):
+        """ from_field(field, sampling, weights=None, injective=True,
+                       frozenedge=True, fd=None)
         
         Create a DeformationGrid from the given deformation field
         (z-y-x order). Also see from_field_multiscale()
@@ -754,19 +752,20 @@ class DeformationGrid(Deformation, splinegrid.GridContainer):
             process. Also, when used in conjunction with injective, a truly
             diffeomorphic deformation is obtained: every input pixel maps
             to a point within the image boundaries.
-        spline_type : {'B', 'Cardinal', 'linear'}
-            The type of spline to use. The B-spline is the only sensible choice.
-        
+        fd : field
+            Field description to describe the shape and sampling of the
+            underlying field to be deformed.
         """
-        
-        grid = cls(field[0], sampling, spline_type)
+        if fd is None:
+            fd = field[0]
+        grid = cls(fd, sampling)
         grid._set_using_field(field, weights, injective, frozenedge)
         return grid
     
     
     @classmethod        
-    def from_field_multiscale(cls, field, sampling, spline_type='B'):
-        """ from_field_multiscale(field, sampling)
+    def from_field_multiscale(cls, field, sampling, weights=None, fd=None):
+        """ from_field_multiscale(field, sampling, weights=None, fd=None)
         
         Create a DeformationGrid from the given deformation field 
         (z-y-x order). Applies from_field_multiscale() for each
@@ -775,8 +774,8 @@ class DeformationGrid(Deformation, splinegrid.GridContainer):
         Important notice
         ----------------
         Note that this is not the best way to make a deformation, as it does
-        not take aspects specific to deformations into account, such 
-        injectivity, and uses additon to combine the sub-deformations instead
+        not take aspects specific to deformations into account, such as
+        injectivity, and uses addition to combine the sub-deformations instead
         of composition.
         
         See DeformationField.from_points_multiscale() for a sound alternative.
@@ -787,22 +786,27 @@ class DeformationGrid(Deformation, splinegrid.GridContainer):
             These arrays describe the deformation field (one per dimension).
         sampling : scalar
             The sampling of the returned grid
-        spline_type : {'B', 'Cardinal', 'linear'}
-            The type of spline to use. The B-spline is the only sensible choice.
-        
+        weights : numpy array
+            This array can be used to weigh the contributions of the 
+            individual elements.
+        fd : field
+            Field description to describe the shape and sampling of the
+            underlying field to be deformed.
         """
+        if fd is None:
+            fd = field[0]
         
         # Get sampling
-        tmp = GridInterface(field, 1)
-        sMin, sMax = splinegrid._calculate_multiscale_sampling(tmp, sampling)
+        tmp = GridInterface(fd, 1)
+        sMin, sMax = _calculate_multiscale_sampling(tmp, sampling)
         
         # Make grid
-        grid = cls(field, sMin)
+        grid = cls(fd, sMin)
         
         # Fill grids
         for d in range(grid.ndim):
             i = grid.ndim - d - 1
-            tmp = SplineGrid.from_field_multiscale(field[d], sampling, spline_type)
+            tmp = SplineGrid.from_field_multiscale(Aarray(field[d], fd.sampling), sampling, weights)
             grid._grids[d] = tmp
         
         # Done
@@ -811,9 +815,9 @@ class DeformationGrid(Deformation, splinegrid.GridContainer):
     
     @classmethod    
     def from_points(cls, image, sampling, pp1, pp2,
-                        injective=True, frozenedge=True, spline_type='B'):
-        """ from_points(image, sampling, pp1, pp2, 
-                                            injective=True, frozenedge=True)
+                    injective=True, frozenedge=True):
+        """ from_points(image, sampling, pp1, pp2,
+                        injective=True, frozenedge=True)
         
         Obtains the deformation field described by the two given sets
         of corresponding points. The deformation describes moving the
@@ -840,28 +844,25 @@ class DeformationGrid(Deformation, splinegrid.GridContainer):
             process. Also, when used in conjunction with injective, a truly
             diffeomorphic deformation is obtained: every input pixel maps
             to a point within the image boundaries.
-        spline_type : {'B', 'Cardinal', 'linear'}
-            The type of spline to use. The B-spline is the only sensible choice.
         
         """
         
         # Obtain reference points and vectors
-        if cls.forward_mapping:
+        if cls._forward_mapping:  # using the prop on cls would get the prop, not the value!
             pp = pp1
-            dd = pp1 - pp2
+            dd = pp2 - pp1
         else:
             pp = pp2
-            dd = pp2 - pp1
+            dd = pp1 - pp2
         
         # Go
-        grid = cls(image, sampling, spline_type)
+        grid = cls(image, sampling)
         grid._set_using_points(pp, dd, injective, frozenedge)
         return grid
     
     
     @classmethod    
-    def from_points_multiscale(cls, image, sampling, pp1, pp2,
-                                                                spline_type='B'):
+    def from_points_multiscale(cls, image, sampling, pp1, pp2):
         """ from_points_multiscale(image, sampling, pp1, pp2)
         
         Obtains the deformation field described by the two given sets
@@ -874,8 +875,8 @@ class DeformationGrid(Deformation, splinegrid.GridContainer):
         Important notice
         ----------------
         Note that this is not the best way to make a deformation, as it does
-        not take aspects specific to deformations into account, such 
-        injectivity, and uses additon to combine the sub-deformations instead
+        not take aspects specific to deformations into account, such as
+        injectivity, and uses addition to combine the sub-deformations instead
         of composition.
         
         Parameters
@@ -888,31 +889,28 @@ class DeformationGrid(Deformation, splinegrid.GridContainer):
             The base points.
         pp2 : Pointset
             The target points.
-        spline_type : {'B', 'Cardinal', 'linear'}
-            The type of spline to use. The B-spline is the only sensible choice.
         
         """
         
         # Obtain reference points and vectors
-        if cls.forward_mapping:
+        if cls._forward_mapping:  # using the prop on cls would get the prop, not the value!
             pp = pp1
-            dd = pp1 - pp2
+            dd = pp2 - pp1
         else:
             pp = pp2
-            dd = pp2 - pp1
+            dd = pp1 - pp2
         
         # Get sampling
-        tmp = GridInterface(field, 1)
-        sMin, sMax = splinegrid._calculate_multiscale_sampling(tmp, sampling)
+        tmp = GridInterface(image, 1)
+        sMin, sMax = _calculate_multiscale_sampling(tmp, sampling)
         
         # Make grid
-        grid = cls(field, sMin)
+        grid = cls(image, sMin)
         
         # Fill grids
         for d in range(grid.ndim):
             i = grid.ndim - d - 1
-            tmp = SplineGrid.from_points(field, sampling, 
-                                                    pp, dd[:,i], spline_type)
+            tmp = SplineGrid.from_points_multiscale(image, sampling, pp, dd[:,i])
             grid._grids[d] = tmp
         
         # Done
@@ -1325,7 +1323,7 @@ class DeformationField(Deformation):
             if not fd.defined_sampling: #sum(test) == self.ndim:
                 pass # Sampling probably not given
             else:
-                raise ValueError('Given reference field does not match.')
+                raise ValueError('Given reference field sampling does not match.')
         
         # Return
         return self.__class__(fields)
@@ -1479,9 +1477,9 @@ class DeformationField(Deformation):
     
     @classmethod        
     def from_field_multiscale(cls, field, sampling, weights=None, 
-                            injective=True, frozenedge=True, spline_type='B'):
+                            injective=True, frozenedge=True, fd=None):
         """ from_field_multiscale(field, sampling, weights=None, 
-                                        injective=True, frozenedge=True)
+                                  injective=True, frozenedge=True, fd=None)
         
         Create a DeformationGrid from the given deformation field 
         (z-y-x order). 
@@ -1515,8 +1513,9 @@ class DeformationField(Deformation):
             process. Also, when used in conjunction with injective, a truly
             diffeomorphic deformation is obtained: every input pixel maps
             to a point within the image boundaries.
-        spline_type : {'B', 'Cardinal', 'linear'}
-            The type of spline to use. The B-spline is the only sensible choice.
+        fd : field
+            Field description to describe the shape and sampling of the
+            underlying field to be deformed.
         
         Notes
         -----
@@ -1531,29 +1530,32 @@ class DeformationField(Deformation):
         
         """
         
+        if fd is None:
+            fd = field[0]
+        
         def setR(gridAdd, residu):
-            #gridAdd._set_using_field(residu, weights, injective, frozenedge)
             gridAdd._set_using_field(residu, weights, injective, frozenedge)
         
         def getR(gridRef=None):
             if gridRef is None:
                 return field
             else:
-#                 if frozenedge:
-#                     pirt.interp.fix_samples_edges(defField)
+                # if frozenedge:
+                #     pirt.interp.fix_samples_edges(defField)
                 residu = []
                 for d in range(gridRef.ndim):
                     residu.append(field[d] - gridRef[d])
+                    #residu.append(field[d] - gridRef[d].get_field())
                 return residu
         
-        return cls._multiscale(setR, getR, field[0], sampling, spline_type)
+        return cls._multiscale(setR, getR, fd, sampling)
     
     
     @classmethod    
     def from_points_multiscale(cls, image, sampling, pp1, pp2, 
-                            injective=True, frozenedge=True, spline_type='B'):
+                               injective=True, frozenedge=True):
         """ from_points_multiscale(image, sampling, pp1, pp2, 
-                            injective=True, frozenedge=True)
+                                   injective=True, frozenedge=True)
         
         Obtains the deformation field described by the two given sets
         of corresponding points. The deformation describes moving the
@@ -1585,8 +1587,6 @@ class DeformationField(Deformation):
             process. Also, when used in conjunction with injective, a truly
             diffeomorphic deformation is obtained: every input pixel maps
             to a point within the image boundaries.
-        spline_type : {'B', 'Cardinal', 'linear'}
-            The type of spline to use. The B-spline is the only sensible choice.
         
         Notes
         -----
@@ -1601,12 +1601,12 @@ class DeformationField(Deformation):
         
         """
         # Obtain reference points and vectors
-        if cls._forward_mapping: # Do not use the property!
+        if cls._forward_mapping:  # using the prop on cls would get the prop, not the value!
             pp = pp1
-            dd = pp1 - pp2
+            dd = pp2 - pp1
         else:
             pp = pp2
-            dd = pp2 - pp1
+            dd = pp1 - pp2
         
         # Init residu
         _residu = dd.copy()
@@ -1625,13 +1625,13 @@ class DeformationField(Deformation):
                 return _residu
         
         # Use multiscale method
-        grid = cls._multiscale(setResidu, getResidu, image, sampling, spline_type)
+        grid = cls._multiscale(setResidu, getResidu, image, sampling)
         return grid
     
     
     @classmethod
-    def _multiscale(cls, setResidu, getResidu, field, sampling, spline_type):
-        """ _multiscale(setResidu, getResidu, field, sampling, spline_type)
+    def _multiscale(cls, setResidu, getResidu, field, sampling):
+        """ _multiscale(setResidu, getResidu, field, sampling)
         
         Method for generating a deformation field using a multiscale 
         B-spline grid approach. from_field_multiscale()
@@ -1642,7 +1642,7 @@ class DeformationField(Deformation):
         
         # Get sampling
         tmp = GridInterface(field, 1)
-        sMin, sMax = splinegrid._calculate_multiscale_sampling(tmp, sampling)
+        sMin, sMax = _calculate_multiscale_sampling(tmp, sampling)
         s, sRef = sMax, sMin*0.9
         
         # Init our running deformation field (identity deform at first)
@@ -1651,13 +1651,10 @@ class DeformationField(Deformation):
         # Init residu
         residu = getResidu()
         
-        # Short name
-        ST = spline_type
-        
         # defField: working field
         # gridAdd: grid to add to working-field
         
-        if cls._forward_mapping: # Do not use the property!
+        if cls._forward_mapping:  # using the prop on cls would get the prop, not the value!
             DeformationGrid = DeformationGridForward
         else:
             DeformationGrid = DeformationGridBackward
@@ -1679,7 +1676,7 @@ class DeformationField(Deformation):
                 iter += 1
                 
                 # Create addGrid using the residual values
-                gridAdd = DeformationGrid(field, s, spline_type=ST)        
+                gridAdd = DeformationGrid(field, s)        
                 setResidu(gridAdd, residu)
                 
                 # Compose deformation field and gridAdd
@@ -1694,7 +1691,7 @@ class DeformationField(Deformation):
                     for i in range(1,len(residu)):
                         error += residu[i]**2
                 elif isinstance(residu, vv.Pointset):
-                    print('Warning, vv.Pointset is used ...')
+                    # print('Warning, vv.Pointset is used ...')
                     error = residu[:,0]**2
                     for i in range(1, residu.ndim):
                         error += residu[:,i]**2
@@ -1769,6 +1766,8 @@ class DeformationGridForward(DeformationGrid):
     deformed image, the pixels are mapped to their new locations. 
     """
     _forward_mapping = True
+
+
 class DeformationGridBackward(DeformationGrid):
     """ A deformation grid representing a backward mapping; the field 
     represents where the pixels in the deformed image should be sampled to
@@ -1776,11 +1775,14 @@ class DeformationGridBackward(DeformationGrid):
     """
     _forward_mapping = False
 
+
 class DeformationFieldForward(DeformationField):
     """ A deformation field representing a forward mapping; to create the 
     deformed image, the pixels are mapped to their new locations. 
     """
     _forward_mapping = True
+
+
 class DeformationFieldBackward(DeformationField):
     """ A deformation field representing a backward mapping; the field 
     represents where the pixels in the deformed image should be sampled to

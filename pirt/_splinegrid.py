@@ -120,11 +120,11 @@ def get_field_at(grid, samples):
     
     # Decide what function to call
     if grid.ndim == 1:
-        _get_field_at1(result.ravel(), grid_sampling_in_pixels, knots, *[s.ravel() for s in samples])
+        _get_field_at1(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
     elif grid.ndim == 2: 
-        _get_field_at2(result.ravel(), grid_sampling_in_pixels, knots, *[s.ravel() for s in samples])
+        _get_field_at2(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
     elif grid.ndim == 3: 
-        _get_field_at3(result.ravel(), grid_sampling_in_pixels, knots, *[s.ravel() for s in samples])
+        _get_field_at3(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
     else:
         tmp = 'Grid interpolation not suported for this dimension.'
         raise RuntimeError(tmp)
