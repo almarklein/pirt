@@ -1,11 +1,16 @@
 """ Module pirt.deformation
 
-This modules implements three classes to represent deformations:
+This modules implements two classes to represent deformations:
+
   * DeformationGrid: represents a deformation in world coordinates using
     a spline grid.
   * DeformationField: represents a deformation in world coordinates using
     an array for each dimension; it describes the deformation for each
     pixel/voxel.
+
+But these are actually base classes, one should use
+DeformationFieldBackward, DeformationFieldForward,
+DeformationGridBackward and DeformationGridForward.
 
 """
 
@@ -35,6 +40,7 @@ class Deformation(object):
     A deformation is either forward mapping or backward mapping.
     
     """
+    
     _forward_mapping = None # Must be set to True or False in subclasses
     
     
@@ -94,7 +100,6 @@ class Deformation(object):
         else:
             # Scale
             return self.scale(factor)
-    
     
     def copy(self):
         """ copy()
@@ -641,7 +646,7 @@ class Deformation(object):
 
 
 class DeformationGrid(Deformation, GridContainer):
-    """ DeformationGrid(field, sampling=5)
+    """ DeformationGrid(image, sampling=5)
    
     A deformation grid represents a deformation using a spline grid. 
     
@@ -651,9 +656,9 @@ class DeformationGrid(Deformation, GridContainer):
     
     Parameters
     ----------
-    field : shape-tuple, numpy-array, Aarray, or FieldDescription
+    image : shape-tuple, numpy-array, Aarray, or FieldDescription
         A description of the field that this grid applies to.
-        The field itself is not stored, only the field's shape and 
+        The image itself is not stored, only the field's shape and 
         sampling are of interest.
     sampling : number
         The spacing of the knots in the field. (For anisotropic fields,
@@ -1046,23 +1051,7 @@ class DeformationGrid(Deformation, GridContainer):
         
         """
         
-#         for grid in self:
-#             # top/left
-#             if True:
-#                 grid._knots[:3] = 0
-#             if self.ndim >= 2:
-#                 grid._knots[:,:3] = 0
-#             if self.ndim >= 3:
-#                 grid._knots[:,:,:3] = 0
-#             
-#             # bottom/right
-#             if True:
-#                 grid._knots[-4:] = 0
-#             if self.ndim >= 2:
-#                 grid._knots[:,-4:] = 0
-#             if self.ndim >= 3:
-#                 grid._knots[:,:,-4:] = 0
-        
+   
         def get_t_factor(grid, d):
             field_edge = (grid.field_shape[d]-1) * grid.field_sampling[d] 
             grid_edge = (grid.grid_shape[d]-4) * grid.grid_sampling
@@ -1121,78 +1110,6 @@ class DeformationGrid(Deformation, GridContainer):
                 grid._knots[:,:,-1] = 0
                 k3, k4 = grid._knots[:,:,-3], grid._knots[:,:,-4]
                 grid._knots[:,:,-2] = -(k3*c3 + k4*c4)/c2
-    
-    
-    def _freeze_edges_old(self):
-        """ _freeze_edges()
-        
-        Freeze the outer knots of the grid such that the deformation is
-        zero at the edges of the image.
-        
-        This sets three rows of knots to zero at the top/left of the
-        grid, and four rows at the bottom/right. This is because at the
-        left there is one knot extending beyond the image, while at the
-        right there are two.
-        
-        """
-        
-        def get_t_factor(grid, d):
-            field_edge = (grid.field_shape[d]-1) * grid.field_sampling[d] 
-            grid_edge = (grid.grid_shape[d]-4) * grid.grid_sampling
-            return (field_edge - grid_edge) / grid.grid_sampling
-        
-        for d in range(len(self)):
-            grid = self[d]
-            
-            # Check if grid is large enough
-            if grid._knots.shape[d] < 6:
-                grid._knots[:] = 0
-                continue
-            
-            if d==0:
-                # top/left
-                grid._knots[1] = 0
-                grid._knots[0] = -grid._knots[2]
-                
-                # Get t factor and coefficients
-                t = get_t_factor(grid, d)
-                c0, c1, c2, c3 = pirt.get_cubic_spline_coefs(t, 'B')
-                
-                # bottom/right
-                grid._knots[-3] = t*grid._knots[-3] # + (1-t)*0
-                grid._knots[-1] = 0
-                k0, k1 = grid._knots[-4], grid._knots[-3]
-                grid._knots[-2] = -(k0*c0 + k1*c1)/c2
-            
-            elif d==1:
-                # top/left
-                grid._knots[:,1] = 0
-                grid._knots[:,0] = -grid._knots[:,2]
-                
-                # Get t factor and coefficients
-                t = get_t_factor(grid, d)
-                c0, c1, c2, c3 = pirt.get_cubic_spline_coefs(t, 'B')
-                
-                # bottom/right
-                grid._knots[:,-3] = t*grid._knots[:,-3] # + (1-t)*0
-                grid._knots[:,-1] = 0
-                k0, k1 = grid._knots[:,-4], grid._knots[:,-3]
-                grid._knots[:,-2] = -(k0*c0 + k1*c1)/c2
-            
-            elif d==2:
-                # top/left
-                grid._knots[:,:,1] = 0
-                grid._knots[:,:,0] = -grid._knots[:,:,2]
-                
-                # Get t factor and coefficients
-                t = get_t_factor(grid, d)
-                c0, c1, c2, c3 = pirt.get_cubic_spline_coefs(t, 'B')
-                
-                # bottom/right
-                grid._knots[:,:,-3] = t*grid._knots[:,:,-3] # + (1-t)*0
-                grid._knots[:,:,-1] = 0
-                k0, k1 = grid._knots[:,:,-4], grid._knots[:,:,-3]
-                grid._knots[:,:,-2] = -(k0*c0 + k1*c1)/c2
 
 
 
@@ -1327,54 +1244,7 @@ class DeformationField(Deformation):
         
         # Return
         return self.__class__(fields)
-        
-#         # Get shapes of self and the reference
-#         shape1 = self.field_shape
-#         shape2 = fd.shape
-#         
-#         
-#         # Determine ranges
-#         ranges = []
-#         steps = []
-#         for d in range(self.ndim):
-#             # Calculate step
-#             s1, s2 = shape1[d], shape2[d]
-#             step = float(s1)/s2
-#             # Convert step to integer factor
-#             if step < 1:
-#                 step = 1.0 / round(1/step)
-#             else:
-#                 step = round(step)
-#             # Create range
-#             r = np.arange(0, s1, step)[0:s2]
-#             ranges.append(r)
-#             steps.append(step)
-#         
-#         # Create meshgrids
-#         ranges.reverse()
-#         meshes = pirt.meshgrid(*ranges)
-#         
-#         # Determine new sampling
-#         newSampling = [s*step for s in self.field_sampling]
-#         
-#         # Verify
-#         if tuple(newSampling) != fd.sampling:
-#             test = [(s==1 and isinstance(s, int)) for s in fd.sampling]
-#             if sum(test) == self.ndim:
-#                 pass # Sampling not really given
-#             else:
-#                 raise ValueError('Given reference field does not match.')
-#         
-#         # Interpolate (upscale/downscale the other)
-#         fields = []
-#         for d in range(len(shape1)):
-#             f = self._fields[d]
-#             f = pirt.interp(f, meshes, 'cubic', 'B')
-#             fields.append( Aarray(f, newSampling) )
-#         
-#         # Return
-#         return self.__class__(fields)
-    
+
     
     ## Sequence stuff
     
@@ -1446,32 +1316,7 @@ class DeformationField(Deformation):
         
         # Done
         return larger_smaller
-    
-#     
-#     def _freeze_edges(self):
-#         """ _freeze_edges()
-#         
-#         Set the edges to zero. Due to rounding errors the edges of the
-#         field can become nonzero after repeated composition even if the
-#         sub-deforms have frozen edges. This method can be called to
-#         keep the edges at zero.
-#         
-#         """
-#         
-#         for d in range(len(self)):
-#             field = self[d]
-#             
-#             # top/left
-#             if d==0:
-#                 field[:2] = 0
-#                 field[-2:] = 0
-#             elif d==1:
-#                 field[:,:2] = 0
-#                 field[:,-2:] = 0
-#             elif d==2:
-#                 field[:,:,:2] = 0
-#                 field[:,:,-2:] = 0
-    
+
     
     ## Multiscale composition from points or a field
     
