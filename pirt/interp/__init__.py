@@ -12,7 +12,7 @@ Copyright 2014-2017(C) Almar Klein
 from ._cubic import get_cubic_spline_coefs
 from ._backward import warp, awarp
 from ._forward import project, aproject
-from ._misc import meshgrid, uglyRoot
+from ._misc import meshgrid, uglyRoot, make_samples_absolute
 
 # More higher level functions
 from ._func import deform_backward, deform_forward

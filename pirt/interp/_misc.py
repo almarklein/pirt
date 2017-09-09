@@ -122,7 +122,7 @@ def make_samples_absolute1(samples_, result_, sampling, dim=0):
     
     # Define variables
     sampling_i = 1.0/sampling
-    Nx = samples.shape[0]
+    Nx = samples_.shape[0]
     
     if dim == 0:
         for x in range(Nx):
@@ -133,8 +133,8 @@ def make_samples_absolute1(samples_, result_, sampling, dim=0):
 def make_samples_absolute2(samples_, result_, sampling, dim=0):
     
     sampling_i = 1.0/sampling
-    Ny = samples.shape[0]
-    Nx = samples.shape[1]
+    Ny = samples_.shape[0]
+    Nx = samples_.shape[1]
     
     if dim == 0:
         for y in range(Ny):
@@ -151,9 +151,9 @@ def make_samples_absolute3(samples_, result_, sampling, dim=0):
     
     # Define variables
     sampling_i = 1.0/sampling
-    Nz = samples.shape[0]
-    Ny = samples.shape[1]
-    Nx = samples.shape[2]
+    Nz = samples_.shape[0]
+    Ny = samples_.shape[1]
+    Nx = samples_.shape[2]
     
     if dim == 0:
         for z in range(Nz):
