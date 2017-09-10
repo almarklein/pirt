@@ -294,6 +294,10 @@ def test_deformation_field():
     assert cog(im0r4).distance(c0) > 0.1
     assert cog(im0r4).distance(c0) < 0.5
     
+    # Test composition op
+    im0r5 = (d4 * d2).inverse().apply_deformation(im6)
+    assert cog(im0r5).distance(c0) < 0.11
+    
     # vv.figure(1); vv.clf(); vv.subplot(221); vv.imshow(im0); vv.subplot(222); vv.imshow(im2); vv.subplot(223); vv.imshow(im4); vv.subplot(224); vv.imshow(im6)
     
     # vv.figure(2); vv.clf(); vv.subplot(211); d2.show(); vv.subplot(212); d3.show()

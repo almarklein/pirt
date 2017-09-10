@@ -93,10 +93,10 @@ class Deformation(object):
     def __add__(self, other):
         return self.add(other)
     
-    def __mult__(self, other):
+    def __mul__(self, other):
         if isinstance(other, Deformation):
             # Compose that creates a new field
-            return self.compose(other)
+            return other.compose(self)
         else:
             # Scale
             return self.scale(factor)
