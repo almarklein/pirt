@@ -12,5 +12,5 @@ pipelines:
         script:
           - python --version
           - pip install numpy scipy numba
-          - python -m 'import pirt'
+          - python -c 'import pirt'
           
