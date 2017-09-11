@@ -11,9 +11,16 @@ pipelines:
           - pip
         script:
           - python --version
-          - pip install flit
-          - pip install numpy scipy numba
+          # Install runtime  and install dependencies
+          - pip install numpy scipy numba visvis
+          - pip install flit          
+          # Enable fake display so that we can create windows
+          - "export DISPLAY=:99.0"
+          - "sh -e /etc/init.d/xvfb start"
+          - sleep 3 # give xvfb some time to start
+          # Install pirt
           - export FLIT_ROOT_INSTALL=1
-          - flit install          
+          - flit install
+          # Import
           - python -c 'import pirt; print(pirt)'
           
