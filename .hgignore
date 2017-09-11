@@ -7,5 +7,9 @@ syntax: glob
 *.c
 build/*
 dist/*
+docs/_build/*
+htmlcov/*
+.cache
+.coverage
 __pycache__
 MANIFEST
