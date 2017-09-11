@@ -11,6 +11,7 @@ pipelines:
           - pip
         script:
           - python --version
+          - exit 1  # arg, no opengl, so we cannot use visvis
           # Install runtime  and install dependencies
           - pip install numpy scipy numba visvis
           - pip install flit          
