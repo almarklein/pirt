@@ -37,7 +37,7 @@ def get_field(grid):
         _get_field2(result, grid.grid_sampling_in_pixels, grid.knots)
     elif grid.ndim == 3: 
         _get_field3(result, grid.grid_sampling_in_pixels, grid.knots)
-    else:
+    else:  # nocov
         tmp = 'Grid interpolation not suported for this dimension.'
         raise RuntimeError(tmp)
     
@@ -55,7 +55,7 @@ def get_field_sparse(grid, pp):
     """
     
     # Test dimensions
-    if grid.ndim != pp.shape[1]:
+    if grid.ndim != pp.shape[1]:  # nocov
         raise ValueError('Dimension of grid and pointset do not match.')
     
     # Create samples
@@ -67,11 +67,7 @@ def get_field_sparse(grid, pp):
     result = np.zeros_like(samples[0], dtype=np.float32)
     
     # Determine sampling
-    inPixels = False
-    if inPixels:
-        grid_sampling_in_pixels = grid.grid_sampling_in_pixels
-    else:
-        grid_sampling_in_pixels = tuple([grid.grid_sampling for i in grid.grid_sampling_in_pixels])
+    grid_sampling_in_pixels = tuple([grid.grid_sampling for i in grid.grid_sampling_in_pixels])
     
     # Decide what function to call
     if grid.ndim == 1:
@@ -83,7 +79,7 @@ def get_field_sparse(grid, pp):
     elif grid.ndim == 3: 
         _get_field_at3(result.ravel(), grid_sampling_in_pixels,
                        grid.knots, *[s.ravel() for s in samples])
-    else:
+    else:  # nocov
         tmp = 'Grid interpolation not suported for this dimension.'
         raise RuntimeError(tmp)
     
@@ -93,32 +89,28 @@ def get_field_sparse(grid, pp):
 def get_field_at(grid, samples):
     """ get_field_at(grid, samples)
     
-    Sample the grid at specified sample locations (in pixels), similar to 
-    pirt.interp.interp().
+    Sample the grid at specified sample locations (in pixels, x-y-z order),
+    similar to pirt.interp.interp().
     
     Also see get_field_sparse().
     
     """
     
     # Test dimensions
-    if not isinstance(samples, (tuple, list)):
+    if not isinstance(samples, (tuple, list)):  # nocov
         raise ValueError('Samples must be list or tuple.')
-    if len(samples) != grid.ndim:
+    if len(samples) != grid.ndim:  # nocov
         raise ValueError('Samples must contain one element per dimension.')
     sample0 = samples[0]
     for sample in samples:
-        if sample0.shape != sample.shape:
+        if sample0.shape != sample.shape:  # nocov
             raise ValueError('Elements in samples must all have the same shape.')
     
     # Init result
     result = np.zeros_like(samples[0], dtype=np.float32)
     
     # Determine sampling
-    inPixels = True
-    if inPixels:
-        grid_sampling_in_pixels = grid.grid_sampling_in_pixels
-    else:
-        grid_sampling_in_pixels = tuple([grid.grid_sampling for i in grid.grid_sampling_in_pixels])
+    grid_sampling_in_pixels = grid.grid_sampling_in_pixels
     
     # Decide what function to call
     if grid.ndim == 1:
@@ -130,7 +122,7 @@ def get_field_at(grid, samples):
     elif grid.ndim == 3: 
         _get_field_at3(result.ravel(), grid_sampling_in_pixels,
                        grid.knots, *[s.ravel() for s in samples])
-    else:
+    else:  # nocov
         tmp = 'Grid interpolation not suported for this dimension.'
         raise RuntimeError(tmp)
     
@@ -482,11 +474,11 @@ def set_field(grid, field, weights):
     Set the grid using the specified field (and optional weights).
     """
     # Test dimensions
-    if grid.field_shape != field.shape:
+    if grid.field_shape != field.shape:  # nocov
         raise ValueError('Dimension of grid-field and field do not match.')
     
     # Test dtype
-    if field.dtype != weights.dtype:
+    if field.dtype != weights.dtype:  # nocov
         raise ValueError('Field and weights must be of the same type.')
     
     # Apply proper function
@@ -496,7 +488,7 @@ def set_field(grid, field, weights):
         num, dnum = _set_field2(grid.grid_sampling_in_pixels, grid.knots, field, weights)
     elif grid.ndim == 3:
         num, dnum = _set_field3(grid.grid_sampling_in_pixels, grid.knots, field, weights)
-    else:
+    else:  # nocov
         tmp = 'This method does not support grids of that dimension.'
         raise RuntimeError(tmp)
     
@@ -513,7 +505,7 @@ def set_field_sparse(grid, pp, values):
     """
     
     # Test dimensions
-    if grid.ndim != pp.shape[1]:
+    if grid.ndim != pp.shape[1]:  # nocov
         raise ValueError('Dimension of grid and pointset do not match.')
     
     # Apply proper function
@@ -523,7 +515,7 @@ def set_field_sparse(grid, pp, values):
         num, dnum = _set_field_sparse2(grid.grid_sampling, grid.knots, pp, values)
     elif grid.ndim == 3:
         num, dnum = _set_field_sparse3(grid.grid_sampling, grid.knots, pp, values)
-    else:
+    else:  # nocov
         tmp = 'This method does not support grids of that dimension.'
         raise RuntimeError(tmp)
 

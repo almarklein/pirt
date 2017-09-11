@@ -37,7 +37,13 @@ def test_unit(rel_path='.'):
         import pytest  # noqa
     except ImportError:
         sys.exit('Cannot do unit tests, pytest not installed')
-    test_path = os.path.join(ROOT_DIR, 'tests')
+    if rel_path:
+        test_paths = []
+        for fname in os.listdir(os.path.join(ROOT_DIR, 'tests')):
+            if rel_path in fname:
+                test_paths.append(os.path.join(ROOT_DIR, 'tests', fname))
+    else:
+        test_paths = [os.path.join(ROOT_DIR, 'tests')]
     # Import from installed or from ROOT_DIR
     if os.getenv('CI'): # os.getenv('TEST_INSTALL', '').lower() in ('1', 'yes', 'true'):
         if ROOT_DIR in sys.path:
@@ -54,7 +60,7 @@ def test_unit(rel_path='.'):
     _clear_our_modules()
     try:
         res = pytest.main(['--cov', NAME, '--cov-config=.coveragerc',
-                           '--cov-report=term', '--cov-report=html', test_path])
+                           '--cov-report=term', '--cov-report=html'] + test_paths)
         sys.exit(res)
     finally:
         m = __import__(NAME)

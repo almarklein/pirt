@@ -1,7 +1,43 @@
 import numpy as np
 import visvis as vv
 
-from pirt import SplineGrid, FD
+from pirt import SplineGrid, FD, GridContainer
+from pirt.splinegrid import _calculate_multiscale_sampling
+from pirt.utils.testing import raises, run_tests_if_main
+
+
+class Struct:
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+def test_field_description():
+    
+    a = Struct(field_shape=(20, 20), field_sampling=(2,1), field_origin=(9,9))
+    fd = FD(a)
+    assert fd.shape == (20, 20)
+    assert fd.sampling == (2, 1)
+    assert fd.origin == (9, 9)
+    assert fd.ndim == 2
+    assert fd.defined_sampling
+    assert fd.defined_origin
+    
+    a = Struct(field_shape=(20, 20, 20))
+    fd = FD(a)
+    assert fd.shape == (20, 20, 20)
+    assert fd.sampling == (1, 1, 1)
+    assert fd.origin == (0, 0, 0)
+    assert fd.ndim == 3
+    assert not fd.defined_sampling
+    assert not fd.defined_origin
+    
+    with raises(TypeError):
+        FD('meh')
+    with raises(TypeError):
+        FD((20, 20), 'meh')
+    with raises(TypeError):
+        FD((20, 20), (2, 1), 'meh')
 
 
 def test_spline_grid_1D():
@@ -177,6 +213,13 @@ def test_spline_grid_2D():
     assert np.all(field6 == field3)
     
     # Get field in points
+    values = sg.get_field_in_points(pp)
+    assert list(values) == [field6[int(p[1]), int(p[0])] for p in pp]
+    
+    # Get field in points beyond field
+    pp = vv.Pointset(2)
+    pp.append(100, 103)
+    pp.append(-100, -108)
     values = sg.get_field_in_points(pp)
     assert list(values) == [field6[int(p[1]), int(p[0])] for p in pp]
     
@@ -384,9 +427,13 @@ def test_spline_grid_1D_anisotropic():
     field6 = sg.get_field()
     assert all(field6 == field3)
     
-    # Get field in points
+    # Get field in points, note pp2, which is in world coords
     values = sg.get_field_in_points(pp2)
     assert list(values) == [field6[int(p[0])] for p in pp]
+    
+    # Get field in samples
+    values2 = sg.get_field_in_samples((pp[:, 0], ))
+    assert list(values) == list(values2)
     
     # Test copy
     sg2 = sg.copy()
@@ -503,6 +550,12 @@ def test_spline_grid_2D_anisotropic():
     values = sg.get_field_in_points(pp2)
     assert list(values) == [field6[int(p[1]), int(p[0])] for p in pp]
     
+    # Get field in samples, x-y-z order
+    values2 = sg.get_field_in_samples((pp[:, 1], pp[:, 0] ))
+    assert list(values) != list(values2)
+    values2 = sg.get_field_in_samples((pp[:, 0], pp[:, 1] ))
+    assert list(values) == list(values2)
+    
     # Test copy
     sg2 = sg.copy()
     assert sg2.field_shape == sg.field_shape
@@ -616,6 +669,12 @@ def test_spline_grid_3D_anisotropic():
     values = sg.get_field_in_points(pp2)
     assert list(values) == [field6[int(p[2]), int(p[1]), int(p[0])] for p in pp]
     
+    # Get field in samples, x-y-z order
+    values2 = sg.get_field_in_samples((pp[:, 2], pp[:, 1], pp[:, 0] ))
+    assert list(values) != list(values2)
+    values2 = sg.get_field_in_samples((pp[:, 0], pp[:, 1], pp[:, 2]))
+    assert list(values) == list(values2)
+    
     # Test copy
     sg2 = sg.copy()
     assert sg2.field_shape == sg.field_shape
@@ -643,8 +702,115 @@ def test_spline_grid_3D_anisotropic():
     print('test_spline_grid_3D_anisotropic ok')
 
 
+def test_grid_container():
+    
+    class ColorGridContainer(GridContainer):
+        
+        def __init__(self, shape, grid_sampling):
+            super().__init__(shape, grid_sampling)
+            for i in range(3):
+                self._grids.append(SplineGrid(shape, grid_sampling))
+    
+    gc = ColorGridContainer((100, 100), 3)
+    assert gc.field_shape == (100, 100)
+    
+    assert len(gc) == 3
+    assert len(gc.grids) == 3
+    for grid in gc:
+        assert isinstance(grid, SplineGrid)
+    assert list(gc) == [gc[0], gc[1], gc[2]]
+    with raises(IndexError):
+        gc[3]
+    with raises(IndexError):
+        gc[-1]
+    with raises(IndexError):
+        gc[:]
+    
+    # resize
+    gc2 = gc.resize_field((60, 60))
+    assert gc2.field_shape == (60, 60)
+    
+    # add
+    gc3 = gc.add(gc)
+    assert gc3.field_shape == (100, 100)
+    assert gc3 is not gc  # not in-place
+    for i in range(3):
+        gc3[i] is not gc[i]
+    
+    # refine
+    gc4 = gc.refine()
+    assert gc4.field_shape == (100, 100)
+    assert gc4.grid_sampling == gc.grid_sampling / 2
+    for i in range(3):
+        gc4[i].grid_sampling == gc4.grid_sampling
+    
+    # copy
+    gc5 = gc.add(gc)
+    assert gc5.field_shape == (100, 100)
+    assert gc5 is not gc  # not in-place
+    for i in range(3):
+        gc5[i] is not gc[i]
+
+
+def test_calculate_multiscale_sampling():
+    
+    # From grid and one value
+    
+    fd = FD((100, 200), (2, 2))
+    mi, ma = _calculate_multiscale_sampling(SplineGrid(fd, 1), 10)
+    assert mi == 10
+    assert ma > 200 * 2 and ma / 2 < 200 * 2
+    assert ma > 10
+    while ma > mi:
+        ma /= 2
+    assert mi == ma
+    
+    fd = FD((2, 9), (0.2, 0.2))
+    mi, ma = _calculate_multiscale_sampling(SplineGrid(fd, 1), 10)
+    assert mi == 10
+    assert ma == 10
+    while ma > mi:
+        ma /= 2
+    assert mi == ma
+    
+    fd = FD((2, 9), (3, 3))
+    mi, ma = _calculate_multiscale_sampling(SplineGrid(fd, 1), 10)
+    assert mi == 10
+    assert ma > 9 * 3 and ma / 2 < 9 * 3
+    assert ma > 10
+    while ma > mi:
+        ma /= 2
+    assert mi == ma
+    
+    # From two values, selects such that ma is power-of-two of mi
+    
+    mi, ma = _calculate_multiscale_sampling(None, (10, 10))
+    assert (mi, ma) == (10, 10)
+    while ma > mi:
+        ma /= 2
+    assert mi == ma
+    
+    mi, ma = _calculate_multiscale_sampling(None, (3, 17))
+    assert (mi, ma) == (3, 12)
+    while ma > mi:
+        ma /= 2
+    assert mi == ma
+    
+    mi, ma = _calculate_multiscale_sampling(None, (3, 18))
+    assert (mi, ma) == (3, 24)
+    while ma > mi:
+        ma /= 2
+    assert mi == ma
+
+    
 if __name__ == '__main__':
-    test_spline_grid_1D()
-    test_spline_grid_2D()
-    test_spline_grid_3D()
-    test_spline_grid_3D_anisotropic()
+    # test_field_description()
+    # test_spline_grid_1D()
+    # test_spline_grid_2D()
+    # test_spline_grid_3D()
+    # test_spline_grid_3D_anisotropic()
+    # test_spline_grid_3D_anisotropic()
+    # test_grid_container()
+    # test_calculate_multiscale_sampling()
+    
+    run_tests_if_main()

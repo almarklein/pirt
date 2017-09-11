@@ -73,7 +73,7 @@ class FieldDescription:
         if isinstance(shape, (list, tuple)):
             self._shape = tuple([int(s) for s in shape])
         else:
-            raise ValueError('Invalid argument for FieldDescription')
+            raise TypeError('Invalid argument for FieldDescription')
         
         # Check and set sampling
         if isinstance(sampling, (list, tuple)):
@@ -82,7 +82,7 @@ class FieldDescription:
         elif sampling is None:
             self._sampling = tuple([1.0 for i in self.shape])
         else:
-            raise ValueError('Invalid sampling for FieldDescription')
+            raise TypeError('Invalid sampling for FieldDescription')
         
         # Check and set origin
         if isinstance(origin, (list, tuple)):
@@ -91,7 +91,7 @@ class FieldDescription:
         elif origin is None:
             self._origin = tuple([0.0 for i in self.shape])
         else:
-            raise ValueError('Invalid origin for FieldDescription')
+            raise TypeError('Invalid origin for FieldDescription')
     
     
     @property
@@ -165,10 +165,10 @@ def _calculate_multiscale_sampling(grid, sampling):
             sMax *= 2
         
         # Select closest level
-        if abs(sMax_-sMax/2) < (abs(sMax_-sMax)):
+        if abs(sMax_ - sMax / 2) < abs(sMax_ - sMax):
             sMax /= 2
     
-    else:
+    else:  # nocov
         raise ValueError('For multiscale, sampling must have two values.')
     
     
@@ -304,7 +304,7 @@ class GridInterface:
         elif isinstance(self, SplineGrid):
             # Copy knots array
             newGrid._knots = self.knots.copy() # note the copy
-        else:
+        else:  # nocov
             raise ValueError('Cannot copy: unknown grid class.')
         
         # Done
@@ -346,7 +346,7 @@ class GridInterface:
             elif self.ndim == 3:
                 newGrid._knots = newKnots[:NS[0], :NS[1], :NS[2]]
         
-        else:
+        else:  # nocov
             raise ValueError('Cannot refine: unknown grid class.')
         
         # Done
@@ -362,7 +362,7 @@ class GridInterface:
         
         # Check
         if not (self.field_shape == other_grid.field_shape and 
-                self.field_sampling == other_grid.field_sampling):
+                self.field_sampling == other_grid.field_sampling):  # nocov
             raise ValueError('Can only add grids that have the same shape and sampling.') 
         
         # Create empty grid with same shape as the other grid.
@@ -375,7 +375,7 @@ class GridInterface:
         elif isinstance(self, SplineGrid):
             # Add knots arrays
             newGrid._knots = self.knots + other_grid.knots
-        else:
+        else:  # nocov
             raise ValueError('Cannot add: unknown grid class.')
         
         # Done
@@ -452,7 +452,7 @@ class GridInterface:
         elif isinstance(self, SplineGrid):
             # Simply copy the knots array
             newGrid._knots = self.knots
-        else:
+        else:  # nocov
             raise ValueError('Cannot resize_field: unknown grid class.')
         
         # Done
@@ -697,7 +697,7 @@ class SplineGrid(GridInterface):
     def get_field_in_points(self, pp):
         """ get_field_in_points(pp)
         
-        Obtain the field in the specied points.
+        Obtain the field in the specied points (in world coordinates).
         
         """
         
@@ -706,6 +706,22 @@ class SplineGrid(GridInterface):
         
         # Sample field
         return _splinegrid.get_field_sparse(self, pp.data)
+    
+    
+    def get_field_in_samples(self, samples):
+        """ get_field_in_samples(pp)
+        
+        Obtain the field in the specied samples (a tuple with pixel
+        coordinates, in x-y-z order).
+        
+        """
+        if not isinstance(samples, (tuple, list)):  # nocov
+            raise ValueError('Samples must be list or tuple.')
+        if len(samples) != self.ndim:  # nocov
+            raise ValueError('Samples must contain one element per dimension.')
+        
+        # Sample field
+        return _splinegrid.get_field_at(self, samples)
     
     
     ## Classmethods to get a grid
