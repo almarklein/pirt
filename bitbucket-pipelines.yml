@@ -11,10 +11,12 @@ pipelines:
           - pip
         script:
           - python --version
-          - exit 1  # arg, no opengl, so we cannot use visvis
           # Install runtime  and install dependencies
           - pip install numpy scipy numba visvis
-          - pip install flit          
+          - pip install flit invoke
+          # Test style
+          - invoke test --style
+          - exit 0  # arg, no opengl, so we cannot use visvis
           # Enable fake display so that we can create windows
           - Xvfb :99 -ac -screen 0 1280x720x16 -nolisten tcp &
           - xvfb=$!
@@ -25,4 +27,3 @@ pipelines:
           - flit install
           # Import
           - python -c 'import pirt; print(pirt)'
-          
