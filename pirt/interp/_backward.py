@@ -6,7 +6,7 @@ import numba
 # from numba import cuda
 
 from ._cubic import spline_type_to_id, set_cubic_spline_coefs
-from ._cubic import cubicsplinecoef_catmullRom, cubicsplinecoef_cardinal, cubicsplinecoef_quadratic
+from ._cubic import cubicsplinecoef_cardinal, cubicsplinecoef_quadratic
 
 
 @numba.jit(nopython=True, nogil=True)
@@ -120,7 +120,8 @@ def warp(data, samples, order=1, spline_type=0.0):
         blockspergrid = (result.size + (threadsperblock - 1)) # threadperblock
         samples = [cuda.to_device(s) for s in samples]
         data = cuda.to_device(data)
-        warp2_cuda[blockspergrid, threadsperblock](data, result.ravel(), samples[0].ravel(), samples[1].ravel(), order, spline_id)
+        warp2_cuda[blockspergrid, threadsperblock](data,
+            result.ravel(), samples[0].ravel(), samples[1].ravel(), order, spline_id)
         # result_cuda_.copy_to_host(result)  # only this array is copied back
         return result
     
@@ -130,7 +131,8 @@ def warp(data, samples, order=1, spline_type=0.0):
     elif data.ndim == 2:
         warp2(data, result.ravel(), samples[0].ravel(), samples[1].ravel(), order, spline_id)
     elif data.ndim == 3:
-        warp3(data, result.ravel(), samples[0].ravel(), samples[1].ravel(), samples[2].ravel(), order, spline_id)
+        warp3(data, result.ravel(), samples[0].ravel(), samples[1].ravel(), samples[2].ravel(),
+              order, spline_id)
     
     # Make Anisotropic array if input data was too
     # --> No: We do not know what the sample points are
@@ -188,7 +190,9 @@ def warp1(data_, result_, samplesx_, order, spline_id):
                     cubicsplinecoef_cardinal(tx, ccx, spline_id)  # tension=spline_id
                 elif spline_id == 99.0:
                     cubicsplinecoef_quadratic(tx, ccx)
-                else:  # Select spline type, slower, but ok, because these make less sense, or are slow anyway
+                else:
+                    # Select spline type, slower, but ok,
+                    # because these make less sense, or are slow anyway
                     set_cubic_spline_coefs(tx, spline_id, ccx)
                 
                 val =  data_[ix-1] * ccx[0]
@@ -295,7 +299,9 @@ def warp2(data_, result_, samplesx_, samplesy_, order, spline_id):
                 elif spline_id == 99.0:
                     cubicsplinecoef_quadratic(tx, ccx)
                     cubicsplinecoef_quadratic(ty, ccy)
-                else:  # Select spline type, slower, but ok, because these make less sense, or are slow anyway
+                else:
+                    # Select spline type, slower, but ok,
+                    # because these make less sense, or are slow anyway
                     set_cubic_spline_coefs(tx, spline_id, ccx)
                     set_cubic_spline_coefs(ty, spline_id, ccy)
                 
@@ -437,7 +443,9 @@ def warp3(data_, result_, samplesx_, samplesy_, samplesz_, order, spline_id):
                     cubicsplinecoef_quadratic(tx, ccx)
                     cubicsplinecoef_quadratic(ty, ccy)
                     cubicsplinecoef_quadratic(tz, ccz)
-                else:  # Select spline type, slower, but ok, because these make less sense, or are slow anyway
+                else:
+                    # Select spline type, slower, but ok,
+                    # because these make less sense, or are slow anyway
                     set_cubic_spline_coefs(tx, spline_id, ccx)
                     set_cubic_spline_coefs(ty, spline_id, ccy)
                     set_cubic_spline_coefs(tz, spline_id, ccz)
@@ -579,6 +587,7 @@ def warp3(data_, result_, samplesx_, samplesy_, samplesz_, order, spline_id):
 ## Cuda
 # Atempt at Cuda implementation, but so far it is slower than the normal one.
 
+cuda = None
 
 # @cuda.jit((numba.float64, ), device=True, inline=True)
 def cuda_floor(i):

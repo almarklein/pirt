@@ -1,16 +1,11 @@
 """ Demons registration algorithm
 """
 
-from __future__ import absolute_import, print_function, division 
-
-import os, sys, time
 import numpy as np
 import scipy.ndimage
 
 import pirt
-from pirt import ( DeformationGridForward, DeformationFieldForward,
-                    DeformationGridBackward, DeformationFieldBackward)
-from pirt.utils import Point, Pointset, Aarray
+from pirt.utils import Aarray
 from .reg_base import GDGRegistration, BaseRegistration, create_grid_image
 
 
@@ -121,7 +116,7 @@ class BaseDemonsRegistration(object):
             # Update textures
             for i in range(len(ims)):
                 if ims[i] is not None:
-                    t = self.visualizer.imshow((2,3,i+1), ims[i])
+                    self.visualizer.imshow((2,3,i+1), ims[i])
         
         if firstpass:
             # Init

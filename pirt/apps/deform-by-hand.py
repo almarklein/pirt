@@ -1,11 +1,9 @@
 import time
-import numpy as np
-import pirt
-from pirt import SplineGrid, FieldDescription
+
+from pirt import FieldDescription
 from pirt import ( DeformationGridForward, DeformationFieldForward,
                     DeformationGridBackward, DeformationFieldBackward)
-from pirt.utils import Point, Pointset, Aarray
-from pirt import interp
+from pirt.utils import Point, Pointset
 
 try:
     import visvis as vv
@@ -323,7 +321,7 @@ class DeformByHand:
 
 
 if __name__ == '__main__':
-#     v = SplineByHand()
+    # v = SplineByHand()
 
     d = None
     d = DeformByHand(vv.imread('lena.png')[:,:,2].astype('float32'))
@@ -409,10 +407,9 @@ if __name__ == '__main__':
         d.apply()
 
 
-if 0:
-##
-    a = d._a3
-    t = a.wobjects[1]
-    im = t._texture1._dataRef
-    vv.imwrite('c:/almar/projects/lena_eyes011.jpg', im[::1,::1]/255)
-    
+    if False:
+        ## 
+        a = d._a3
+        t = a.wobjects[1]
+        im = t._texture1._dataRef
+        vv.imwrite('c:/almar/projects/lena_eyes011.jpg', im[::1,::1]/255)

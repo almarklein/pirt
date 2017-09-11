@@ -10,9 +10,7 @@ This module provides two classes:
 
 # todo: move to pyzolib? or somewhere else?
 
-from __future__ import absolute_import, print_function, division 
-
-import os, sys, time
+import os
 import hashlib
 
 import numpy as np
@@ -73,7 +71,7 @@ class Database:
         # Test object
         if ssdf.isstruct(object):
             pass
-        if isinstance(object, (int, float, basestring, np.ndarray, tuple, list)):
+        if isinstance(object, (int, float, str, np.ndarray, tuple, list)):
             pass # Default ssdf compatible
         elif ssdf.is_compatible_class(object):
             pass # Compatible
@@ -141,7 +139,7 @@ class Database:
         """
         
         # Hash key?
-        if isinstance(key, basestring):
+        if isinstance(key, str):
             key = key.replace(' ', '_')
         else:
             key = self._hasher(key)
@@ -161,7 +159,7 @@ class Database:
         h = hashlib.sha256()
         
         # Hash
-        if isinstance(object, basestring):
+        if isinstance(object, str):
             h.update(object)
         elif ssdf.isstruct(object):
             h.update(ssdf.saves(object))
@@ -337,7 +335,7 @@ class Experiment:
         # Test arguments
         if not isinstance(series_nr, int) or series_nr < 0:
             raise ValueError('series_nr must be an integer >= zero.')
-        if not isinstance(param, basestring):
+        if not isinstance(param, str):
             raise ValueError('param must be a parameter name (as a string).')
         if isinstance(values, np.ndarray):
             values = [val for val in values]
@@ -592,7 +590,6 @@ if __name__ == '__main__':
     # Let's say we want to estimate for which value of x some magic process
     # is maximum. We simulate this process using noise. By using a seed,
     # the experiments are repeatable.
-    import numpy as np    
     import time
     np.random.seed(1234)
     

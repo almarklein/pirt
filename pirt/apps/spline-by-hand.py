@@ -1,10 +1,7 @@
-import time
 import numpy as np
-import pirt
-from pirt import SplineGrid, FieldDescription
-from pirt import ( DeformationGridForward, DeformationFieldForward,
-                    DeformationGridBackward, DeformationFieldBackward)
-from pirt.utils import Point, Pointset, Aarray
+
+from pirt import SplineGrid
+from pirt.utils import Point, Pointset
 from pirt import interp
 
 try:
@@ -253,7 +250,7 @@ class SplineByHand:
         
         grid.knots[-3] = t*grid.knots[-3] # + (1-t)*0
         grid.knots[-1] = 0
-        k0, k1, k2 = grid.knots[-4], grid.knots[-3], grid.knots[-2]
+        k0, k1 = grid.knots[-4], grid.knots[-3]
         grid.knots[-2] = -(k0*c0 + k1*c1)/c2
 
 

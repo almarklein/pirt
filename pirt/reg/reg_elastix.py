@@ -1,15 +1,9 @@
 """ Registration using the elastix registration toolkit.
 """
 
-from __future__ import absolute_import, print_function, division 
-
-import os, sys, time
-
-import numpy as np
-
 from .reg_base import AbstractRegistration
 from pirt.utils import ssdf 
-from pirt import gfilter, DeformationFieldBackward
+from pirt import DeformationFieldBackward
 from .pyelastix import Elastix
 
 
@@ -64,7 +58,8 @@ class ElastixRegistration(AbstractRegistration):
         # Check
         if not isinstance(self, ElastixGroupwiseRegistration):
             if len(args)>2:
-                raise ValueError('Can only register two images. Use ElastixGroupwiseRegistration instead.')
+                raise ValueError('Can only register two images. '
+                                 'Use ElastixGroupwiseRegistration instead.')
         
         reg = Elastix()
         self._params2 = ssdf.new() + reg.get_advanced_params()    

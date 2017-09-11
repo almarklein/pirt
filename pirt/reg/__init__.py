@@ -1,7 +1,7 @@
+# flake8: noqa
+
 """ Registration objects
 """
-
-from __future__ import absolute_import, print_function, division 
 
 from .reg_base import AbstractRegistration, NullRegistration, BaseRegistration, GDGRegistration
 from .reg_gravity import GravityRegistration

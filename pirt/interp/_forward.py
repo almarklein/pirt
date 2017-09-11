@@ -4,8 +4,6 @@
 import numpy as np
 import numba
 
-from ._cubic import spline_type_to_id, set_cubic_spline_coefs
-
 
 @numba.jit(nopython=True, nogil=True)
 def floor(i):

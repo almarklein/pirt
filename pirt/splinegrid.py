@@ -9,13 +9,9 @@ field (such as color or deformations).
 
 """
 
-from __future__ import absolute_import, print_function, division 
-
-import os, sys, time
 import numpy as np
 
-import pirt
-from pirt.utils import Point, Pointset, Aarray
+from pirt.utils import Pointset, Aarray
 
 from . import _splinegrid
 
@@ -367,7 +363,7 @@ class GridInterface:
         # Check
         if not (self.field_shape == other_grid.field_shape and 
                 self.field_sampling == other_grid.field_sampling):
-           raise ValueError('Can only add grids that have the same shape and sampling.') 
+            raise ValueError('Can only add grids that have the same shape and sampling.') 
         
         # Create empty grid with same shape as the other grid.
         fd = FieldDescription(self)
@@ -869,7 +865,7 @@ class SplineGrid(GridInterface):
         """
         
         # Keep original for debugging
-        ppo = pp
+        ppo = pp  # noqa
         
         # Get reversed field shape
         tmp = [sh*sa for sh,sa in zip(self.field_shape, self.field_sampling)]

@@ -10,14 +10,13 @@ deformations can be repeated.
 
 """
 
-import os, sys, time
 import numpy as np
 import pirt
 
 
 # Due to the from_field_multiscale thingy on the end to make the deform 
 # injective this function becomes really slow.
-def create_random_deformation_Gaussian(im, amplitude=1, min_sigma=10, nblobs=50, seed=None):
+def create_random_deformation_gaussian(im, amplitude=1, min_sigma=10, nblobs=50, seed=None):
     """ create_random_deformation(im, amplitude=1, min_sigma=10, nblobs=50, seed=None)
     
     Create a random deformation using Gaussian blobs or different scales.

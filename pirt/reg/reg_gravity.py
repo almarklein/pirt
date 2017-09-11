@@ -1,16 +1,11 @@
 """ Registration using gravity registration.
 """
 
-from __future__ import absolute_import, print_function, division 
-
-import os, sys, time
 import numpy as np
 import scipy.ndimage
 
 import pirt
-from pirt import ( DeformationGridForward, DeformationFieldForward,
-                    DeformationGridBackward, DeformationFieldBackward)
-from pirt.utils import Point, Pointset, Aarray
+from pirt.utils import Aarray
 from .reg_base import GDGRegistration, create_grid_image
 
 
@@ -247,7 +242,7 @@ class GravityRegistration(GDGRegistration):
             gradient.append( tmp )
         
         # Done
-        return  mass, tuple(gradient)
+        return mass, tuple(gradient)
     
     
     def _soft_limit1(self, data, limit):

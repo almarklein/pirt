@@ -14,8 +14,6 @@ Contents of this module:
 
 """
 
-from __future__ import absolute_import, print_function, division 
-
 # SHORTED VERSION WITHOUT PYRAMID STUFF
 
 import numpy as np
@@ -186,8 +184,8 @@ def gaussiankernel(sigma, order=0, N=None, returnt=False, warn=True):
     # Check whether given sigma is large enough 
     sigmaMin = 0.5 + order**(0.62) / 5
     if warn and sigma < sigmaMin:
-       print('WARNING: The scale (sigma) is very small for the given order, '\
-            'better use a larger scale!')
+        print('WARNING: The scale (sigma) is very small for the given order, '
+              'better use a larger scale!')
     
     # Create t vector which indicates the x-position
     t = np.arange(-N/2.0+0.5, N/2.0, 1.0, dtype=np.float64)
@@ -326,7 +324,7 @@ def gfilter(L, sigma, order=0, mode='constant', warn=True):
         sigma = [sigma for i in range(L.ndim)]
         
     # same for order
-    if order == None:
+    if order is None:
         order = 0
     try:
         order = [o for o in order]

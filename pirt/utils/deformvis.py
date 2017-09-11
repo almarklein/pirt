@@ -5,11 +5,8 @@ Visualization based on visvis.
 
 """
 
-import os, sys, time
 import visvis as vv
 import numpy as np
-
-import OpenGL.GL as gl
 
 ## The GLSL code
 
@@ -154,7 +151,7 @@ class DeformableMixin(vv.MotionMixin):
         elif N==1:
             deform = amp * self._deforms[0] 
         else:
-            t0 = time.time()
+            # t0 = time.time()
             deform = None
             for i, w in zip(ii, ww):
                 if w != 0.0:
@@ -162,7 +159,7 @@ class DeformableMixin(vv.MotionMixin):
                         deform = (w*amp) * self._deforms[i]
                     else:
                         deform += (w*amp) * self._deforms[i]
-            #print 'deform composition took', time.time()-t0, 's'
+            # print 'deform composition took', time.time()-t0, 's'
         
         # Update deform texture  (fast update because shape is the same)
         if deform is not None:
@@ -297,7 +294,7 @@ class DeformableTexture3D(vv.Texture3D, DeformableMixin):
     def _UpdateDeformShaderAfterSetDeforms(self, origin, sampling, shape):
         
         if self._deformTexture is None:
-            shader.vertex.Remove(SH_3F_DEFORM)
+            self.shader.vertex.Remove(SH_3F_DEFORM)
             self.Draw()
             return
         
@@ -337,13 +334,14 @@ class DeformableMesh(vv.Mesh, DeformableMixin):
     def _UpdateDeformShaderAfterSetDeforms(self, origin, sampling, shape):
         
         if self._deformTexture is None:
-            shader.vertex.Remove(SH_MV_DEFORM)
+            for shader in [self.faceShader, self.shapeShader]:
+                shader.vertex.Remove(SH_MV_DEFORM)
             self.Draw()
             return
         
         # Reverse three props (i.e. make x-y-z) and make floats
         if None in [origin, sampling, shape]:
-            raise ValueError('Need origin and sampling to determine the location of the deformation.')
+            raise ValueError('Need origin and sampling to determine location of the deformation.')
         origin = [float(i) for i in reversed(origin)]
         sampling = [float(i) for i in reversed(sampling)]
         shape = [float(i) for i in reversed(shape)]

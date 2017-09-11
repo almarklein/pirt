@@ -1,11 +1,15 @@
+# flake8: noqa
 """ Pirt - Python Image Registration Toolkit """
 
-from __future__ import absolute_import, print_function, division 
-
-
-# Set version number
 __version__ = '2.0.1'
 
+
+# Check compat
+import sys
+if sys.version_info < (3, 4):
+    raise RuntimeError('Pirt requires at least Python 3.4')
+
+# Imports 
 
 from .utils import Point, Pointset, Aarray
 
@@ -28,3 +32,6 @@ from pirt.deformation import (Deformation, DeformationIdentity,
 from .utils.randomdeformations import create_random_deformation, RandomDeformations
 
 from . import reg
+
+# Clean up
+del sys

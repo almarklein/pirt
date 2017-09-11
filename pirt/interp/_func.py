@@ -1,13 +1,10 @@
-
-from __future__ import absolute_import, print_function, division 
-
 import numpy as np
 
 from ..gaussfun import diffuse
 from ..utils import Aarray
 
-from ._backward import warp, awarp
-from ._forward import project, aproject
+from ._backward import warp, awarp  # noqa
+from ._forward import project, aproject  # noqa
 from ._misc import make_samples_absolute, meshgrid
 
 
@@ -193,7 +190,7 @@ def resize(data, new_shape, order=3, spline_type=0.0, prefilter=False, extra=Fal
     return Aarray(data2, sampling2, origin2)
 
 
-def imresize(data, factor, order=3):
+def imresize(data, new_shape, order=3):
     """ imzoom(data, factor, order=3)
     
     Convenience function to resize the image data (1D, 2D or 3D).
@@ -212,7 +209,7 @@ def imresize(data, factor, order=3):
         The interpolation order to use.
     
     """
-    return imresize(data, new_shape, order, 0.0, True, True)
+    return resize(data, new_shape, order, 0.0, True, True)
 
 
 def zoom(data, factor, order=3, spline_type=0.0, prefilter=False, extra=False):

@@ -2,8 +2,6 @@
 Defines the base registration object.
 """
 
-from __future__ import absolute_import, print_function, division 
-
 import time
 import numpy as np
 import pirt
@@ -240,7 +238,7 @@ class Visualizer(object):
         Initialize by giving a figure.
         
         """
-        import visvis as vv # so importerror is raised if visvis not available
+        import visvis as vv  # noqa - so importerror is raised if visvis not available
         self._f = fig
     
     @property
@@ -544,7 +542,7 @@ class AbstractRegistration(object):
 #         # Handle mapping
 #         if mapping is None:
 #             mapForward = self.forward_mapping
-#         elif isinstance(mapping, basestring):
+#         elif isinstance(mapping, str):
 #             if mapping.lower() == 'forward':  mapForward = True
 #             elif mapping.lower() == 'backward':  mapForward = False
 #             else:  raise ValueError('Invalid mapping specified.')
@@ -592,10 +590,13 @@ class AbstractRegistration(object):
         # Handle mapping
         if mapping is None:
             mapForward = self.forward_mapping
-        elif isinstance(mapping, basestring):
-            if mapping.lower() == 'forward':  mapForward = True
-            elif mapping.lower() == 'backward':  mapForward = False
-            else:  raise ValueError('Invalid mapping specified.')
+        elif isinstance(mapping, str):
+            if mapping.lower() == 'forward':
+                mapForward = True
+            elif mapping.lower() == 'backward':
+                mapForward = False
+            else:
+                raise ValueError('Invalid mapping specified.')
         elif isinstance(mapping, Deformation):
             mapForward = mapping.forward_mapping
         else: 
@@ -646,7 +647,7 @@ class AbstractRegistration(object):
             raise RuntimeError('The result is not available; run register().')
         
         # Make how lower if string
-        if isinstance(how, basestring):
+        if isinstance(how, str):
             how = how.lower()
         
         # Import visvis

@@ -14,7 +14,6 @@ coordinates, which are expressed using integers x, y, z.
 
 import numpy as np
 import numba
-from numpy import pi, sin
 
 from .interp._cubic import cubicsplinecoef_basis
 
@@ -76,11 +75,14 @@ def get_field_sparse(grid, pp):
     
     # Decide what function to call
     if grid.ndim == 1:
-        _get_field_at1(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
+        _get_field_at1(result.ravel(), grid_sampling_in_pixels,
+                       grid.knots, *[s.ravel() for s in samples])
     elif grid.ndim == 2: 
-        _get_field_at2(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
+        _get_field_at2(result.ravel(), grid_sampling_in_pixels,
+                       grid.knots, *[s.ravel() for s in samples])
     elif grid.ndim == 3: 
-        _get_field_at3(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
+        _get_field_at3(result.ravel(), grid_sampling_in_pixels,
+                       grid.knots, *[s.ravel() for s in samples])
     else:
         tmp = 'Grid interpolation not suported for this dimension.'
         raise RuntimeError(tmp)
@@ -120,11 +122,14 @@ def get_field_at(grid, samples):
     
     # Decide what function to call
     if grid.ndim == 1:
-        _get_field_at1(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
+        _get_field_at1(result.ravel(), grid_sampling_in_pixels,
+                       grid.knots, *[s.ravel() for s in samples])
     elif grid.ndim == 2: 
-        _get_field_at2(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
+        _get_field_at2(result.ravel(), grid_sampling_in_pixels,
+                       grid.knots, *[s.ravel() for s in samples])
     elif grid.ndim == 3: 
-        _get_field_at3(result.ravel(), grid_sampling_in_pixels, grid.knots, *[s.ravel() for s in samples])
+        _get_field_at3(result.ravel(), grid_sampling_in_pixels,
+                       grid.knots, *[s.ravel() for s in samples])
     else:
         tmp = 'Grid interpolation not suported for this dimension.'
         raise RuntimeError(tmp)
@@ -153,7 +158,7 @@ def _get_field1(result, grid_sampling_in_pixels, knots):
         # Note the +1 to correct for padding.        
         tmp = x / grid_xSpacing + 1
         gx = int(tmp)
-        tx	= tmp - gx
+        tx = tmp - gx
         
         # Get coefficients
         cubicsplinecoef_basis(tx, ccx)
@@ -161,7 +166,7 @@ def _get_field1(result, grid_sampling_in_pixels, knots):
         # Init value
         val = 0.0
         
-        # For each knot ...	        
+        # For each knot ...         
         ii = gx - 1  # x-location of first knot
         for i in range(4):
             # Calculate interpolated value.
@@ -194,11 +199,11 @@ def _get_field2(result, grid_sampling_in_pixels, knots):
             # Note the +1 to correct for padding.
             tmp = y / grid_ySpacing + 1
             gy = int(tmp)
-            ty	= tmp - gy
+            ty = tmp - gy
             #
             tmp = x / grid_xSpacing + 1
             gx = int(tmp)
-            tx	= tmp - gx
+            tx = tmp - gx
             
             # Get coefficients
             cubicsplinecoef_basis(ty, ccy)
@@ -207,7 +212,7 @@ def _get_field2(result, grid_sampling_in_pixels, knots):
             # Init value
             val = 0.0
             
-            # For each knot ...	
+            # For each knot ... 
             jj = gy - 1  # y-location of first knot
             for j in range(4):
                 ii = gx - 1  # x-location of first knot
@@ -245,15 +250,15 @@ def _get_field3(result, grid_sampling_in_pixels, knots):
                 # Note the +1 to correct for padding.
                 tmp = z / grid_zSpacing + 1
                 gz = int(tmp)
-                tz	= tmp - gz
+                tz = tmp - gz
                 #
                 tmp = y / grid_ySpacing + 1
                 gy = int(tmp)
-                ty	= tmp - gy
+                ty = tmp - gy
                 #
                 tmp = x / grid_xSpacing + 1
                 gx = int(tmp)
-                tx	= tmp - gx
+                tx = tmp - gx
                 
                 # Get coefficients
                 cubicsplinecoef_basis(tz, ccz)
@@ -263,7 +268,7 @@ def _get_field3(result, grid_sampling_in_pixels, knots):
                 # Init value
                 val = 0.0
                 
-                # For each knot ...	
+                # For each knot ... 
                 kk = gz -1  # z-location of first knot
                 for k in range(4):
                     jj = gy - 1  # y-location of first knot
@@ -302,7 +307,7 @@ def _get_field_at1(result, grid_sampling_in_pixels, knots, samplesx_):
         # Note the +1 to correct for padding.
         tmp = wx / grid_xSpacing + 1
         gx = int(tmp)
-        tx	= tmp - gx
+        tx = tmp - gx
         
         # Check if within bounds of interpolatable domain
         if gx < 1 or gx >= gridShapex-2:
@@ -315,7 +320,7 @@ def _get_field_at1(result, grid_sampling_in_pixels, knots, samplesx_):
         # Init value
         val = 0.0
         
-        # For each knot ...	
+        # For each knot ... 
         ii = gx - 1  # x-location of first knot
         for i in range(4):
             # Calculate interpolated value.
@@ -353,11 +358,11 @@ def _get_field_at2(result_, grid_sampling_in_pixels, knots, samplesx_, samplesy_
         # Note the +1 to correct for padding.
         tmp = wy / grid_ySpacing + 1
         gy = int(tmp)
-        ty	= tmp - gy
+        ty = tmp - gy
         #
         tmp = wx / grid_xSpacing + 1
         gx = int(tmp)
-        tx	= tmp - gx
+        tx = tmp - gx
         
         # Check if within bounds of interpolatable domain
         if (    (gy < 1 or gy >= gridShapey - 2) or
@@ -372,7 +377,7 @@ def _get_field_at2(result_, grid_sampling_in_pixels, knots, samplesx_, samplesy_
         # Init value
         val = 0.0
         
-        # For each knot ...	
+        # For each knot ... 
         jj = gy - 1  # y-location of first knot
         for j in range(4):
             ii = gx - 1  # x-location of first knot
@@ -418,15 +423,15 @@ def _get_field_at3(result_, grid_sampling_in_pixels, knots, samplesx_, samplesy_
         # Note the +1 to correct for padding.
         tmp = wz / grid_zSpacing + 1
         gz = int(tmp)
-        tz	= tmp - gz
+        tz = tmp - gz
         #
         tmp = wy / grid_ySpacing + 1
         gy = int(tmp)
-        ty	= tmp - gy
+        ty = tmp - gy
         #
         tmp = wx / grid_xSpacing + 1
         gx = int(tmp)
-        tx	= tmp - gx
+        tx = tmp - gx
         
         # Check if within bounds of interpolatable domain
         if (    (gx < 1 or gx >= gridShapex - 2) or
@@ -443,7 +448,7 @@ def _get_field_at3(result_, grid_sampling_in_pixels, knots, samplesx_, samplesy_
         # Init value
         val = 0.0
         
-        # For each knot ...	
+        # For each knot ... 
         kk = gz - 1  # z-location of first knot
         for k in range(4):
             jj = gy - 1  # y-location of first knot
@@ -556,7 +561,7 @@ def _set_field1(grid_sampling_in_pixels, knots, field, weights):
         # Note the +1 to correct for padding.
         tmp = x / grid_xSpacing + 1
         gx = int(tmp)
-        tx	= tmp - gx
+        tx = tmp - gx
         
         # Get coefficients
         cubicsplinecoef_basis(tx, ccx)
@@ -612,11 +617,11 @@ def _set_field2(grid_sampling_in_pixels, knots, field, weights):
             # Note the +1 to correct for padding.
             tmp = y / grid_ySpacing + 1
             gy = int(tmp)
-            ty	= tmp - gy
+            ty = tmp - gy
             #
             tmp = x / grid_xSpacing + 1
             gx = int(tmp)
-            tx	= tmp - gx
+            tx = tmp - gx
             
             # Get coefficients
             cubicsplinecoef_basis(ty, ccy)
@@ -679,15 +684,15 @@ def _set_field3(grid_sampling_in_pixels, knots, field, weights):
                 # Note the +1 to correct for padding.
                 tmp = z / grid_zSpacing + 1
                 gz = int(tmp)
-                tz	= tmp - gz
+                tz = tmp - gz
                 #
                 tmp = y / grid_ySpacing + 1
                 gy = int(tmp)
-                ty	= tmp - gy
+                ty = tmp - gy
                 #
                 tmp = x / grid_xSpacing + 1
                 gx = int(tmp)
-                tx	= tmp - gx
+                tx = tmp - gx
                 
                 # Get coefficients
                 cubicsplinecoef_basis(tz, ccz)
@@ -742,7 +747,7 @@ def _set_field_sparse1(grid_sampling, knots, pp, values):
         # corner and find ratio's of influence between lattice point.
         tmp = wx / wGridSampling + 1
         gx = int(tmp)
-        tx	= tmp - gx
+        tx = tmp - gx
         
         # Get coefficients
         cubicsplinecoef_basis(tx, ccx)
@@ -795,11 +800,11 @@ def _set_field_sparse2(grid_sampling, knots, pp, values):
         # corner and find ratio's of influence between lattice point.
         tmp = wy / wGridSampling + 1
         gy = int(tmp)
-        ty	= tmp - gy
+        ty = tmp - gy
         #
         tmp = wx / wGridSampling + 1
         gx = int(tmp)
-        tx	= tmp - gx
+        tx = tmp - gx
         
         # Get coefficients
         cubicsplinecoef_basis(ty, ccy)
@@ -859,15 +864,15 @@ def _set_field_sparse3(grid_sampling, knots, pp, values):
         # corner and find ratio's of influence between lattice point.
         tmp = wz / wGridSampling + 1
         gz = int(tmp)
-        tz	= tmp - gz
+        tz = tmp - gz
         #
         tmp = wy / wGridSampling + 1
         gy = int(tmp)
-        ty	= tmp - gy
+        ty = tmp - gy
         #
         tmp = wx / wGridSampling + 1
         gx = int(tmp)
-        tx	= tmp - gx
+        tx = tmp - gx
         
         # Get coefficients
         cubicsplinecoef_basis(tz, ccz)

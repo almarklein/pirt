@@ -58,8 +58,6 @@ Stefan Klein)
 
 """
 
-from __future__ import absolute_import, print_function, division 
-
 #   Copyright (c) 2010, Almar Klein
 #   All rights reserved.
 #
@@ -88,12 +86,18 @@ from __future__ import absolute_import, print_function, division
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import os, sys, time
-import platform, ctypes
+import os
+import sys
+import time
+import platform
+import ctypes
 import threading
 import subprocess
 import re
+from functools import reduce
+
 import numpy as np
+
 
 # Try importing Aarray class from different sources
 try:
@@ -252,7 +256,7 @@ def _find_tempdir():
     for fname in os.listdir(tempdir):
         dirName = os.path.join(tempdir, fname)
         # Check if is right kind of dir
-        if not (os.path.isdir(dirName) and  fname.startswith('pid')):
+        if not (os.path.isdir(dirName) and fname.startswith('pid')):
             continue
         # Get pid and check if its running
         try:
@@ -351,7 +355,6 @@ def system3(cmd, verbose=False):
             import signal
             os.kill(pid, signal.SIGKILL)
         elif sys.platform.startswith('win'):
-            import ctypes
             kernel32 = ctypes.windll.kernel32
             handle = kernel32.OpenProcess(1, 0, pid)
             kernel32.TerminateProcess(handle, 0)
@@ -700,7 +703,7 @@ class Elastix(object):
                 paths.append(paths[0])
                 continue
             
-            if isinstance(im, basestring):
+            if isinstance(im, str):
                 # Given a location
                 if os.path.isfile(im1):
                     paths.append(im)
@@ -917,7 +920,7 @@ class Elastix(object):
                 if not '.' in tmp:
                     tmp += '.0'
                 return tmp
-            elif isinstance(val, basestring):
+            elif isinstance(val, str):
                 return '"%s"' % val
         
         # Compile text

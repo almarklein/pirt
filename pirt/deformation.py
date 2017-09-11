@@ -14,15 +14,13 @@ DeformationGridBackward and DeformationGridForward.
 
 """
 
-from __future__ import absolute_import, print_function, division 
+import time  # noqa
 
-import os, sys, time
 import numpy as np
-
 import visvis as vv
 
 import pirt
-from pirt.utils import Point, Pointset, Aarray
+from pirt.utils import Pointset, Aarray
 from pirt import interp
 from pirt.splinegrid import GridInterface, GridContainer, SplineGrid, FD
 from pirt.splinegrid import _calculate_multiscale_sampling
@@ -99,6 +97,7 @@ class Deformation(object):
             return other.compose(self)
         else:
             # Scale
+            factor = other
             return self.scale(factor)
     
     def copy(self):
@@ -157,7 +156,7 @@ class Deformation(object):
             raise ValueError('Unknown deformation class.')
     
     
-    def add(def1, def2):
+    def add(def1, def2):  # noqa - flake8 wants first arg to be self
         """ add(other)
         
         Combine two deformations by addition. 
@@ -219,7 +218,7 @@ class Deformation(object):
                     newDeform = DeformationGridBackward(fd, def1.grid_sampling)
                 # Add knots
                 for d in range(def1.ndim):
-                   newDeform[d]._knots = def1[d]._knots + def2[d]._knots
+                    newDeform[d]._knots = def1[d]._knots + def2[d]._knots
                 return newDeform
             
             else:
@@ -228,7 +227,7 @@ class Deformation(object):
                 # Add fields
                 fields = []
                 for d in range(def1.ndim):
-                   fields.append( def1.get_field(d) + def2.get_field(d) )
+                    fields.append( def1.get_field(d) + def2.get_field(d) )
                 # Create new field
                 if def1.forward_mapping:
                     newDeform = DeformationFieldForward(*fields)
@@ -237,7 +236,7 @@ class Deformation(object):
                 return newDeform
     
     
-    def compose(def1, def2):
+    def compose(def1, def2):  # noqa - flake8 wants first arg to be self
         """ compose(other):
         
         Combine two deformations by composition. The left is the "static"
@@ -302,7 +301,7 @@ class Deformation(object):
                 return DeformationFieldBackward(*fields)
     
     
-    def _compose_forward(def1, def2):
+    def _compose_forward(def1, def2):  # noqa - flake8 wants first arg to be self
         # Sample in def2 at the locations pointed to by def1
         # Sample in the other at the locations pointed to by this field
         
@@ -336,7 +335,7 @@ class Deformation(object):
         # Done
         return fields
     
-    def _compose_backward(def1, def2):
+    def _compose_backward(def1, def2):  # noqa - flake8 wants first arg to be self
         # Sample in def1 at the locations pointed to by the def2
         return def2._compose_forward(def1)
     
@@ -430,7 +429,7 @@ class Deformation(object):
         samples = [s for s in reversed(deform)]
         
         # Deform!
-        t0 = time.time()
+        # t0 = time.time()
         if self.forward_mapping:
             result = pirt.interp.deform_forward(data, samples)
             # print 'forward deformation took %1.3f seconds' % (time.time()-t0)
@@ -810,8 +809,9 @@ class DeformationGrid(Deformation, GridContainer):
         
         # Fill grids
         for d in range(grid.ndim):
-            i = grid.ndim - d - 1
-            tmp = SplineGrid.from_field_multiscale(Aarray(field[d], fd.sampling), sampling, weights)
+            # i = grid.ndim - d - 1
+            tmp = SplineGrid.from_field_multiscale(Aarray(field[d], fd.sampling),
+                                                   sampling, weights)
             grid._grids[d] = tmp
         
         # Done
@@ -1235,9 +1235,8 @@ class DeformationField(Deformation):
             fields.append( field2 )
         
         # Verify
-        if not self._sampling_equal(field2, fd): 
-            test = [(s==1) for s in fd.sampling]
-            if not fd.defined_sampling: #sum(test) == self.ndim:
+        if not self._sampling_equal(field2, fd):
+            if not fd.defined_sampling: #sum([(s==1) for s in fd.sampling]) == self.ndim:
                 pass # Sampling probably not given
             else:
                 raise ValueError('Given reference field sampling does not match.')

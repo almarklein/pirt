@@ -1,3 +1,5 @@
+# flake8: noqa
+
 """ pirt.utils
 
 Utilities related to deformations and registration.

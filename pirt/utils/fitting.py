@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.linalg
-from pirt.utils import Point, Pointset
+from pirt.utils import Pointset
+
 
 if True:
     # Precalculate a matrix for fitting a quadratic polynom to three points
