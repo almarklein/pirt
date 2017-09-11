@@ -13,7 +13,7 @@ pipelines:
           - python --version
           # Install runtime  and install dependencies
           - pip install numpy scipy numba visvis
-          - pip install flit invoke
+          - pip install flit invoke flake8 pytest
           # Test style
           - invoke test --style
           - exit 0  # arg, no opengl, so we cannot use visvis
