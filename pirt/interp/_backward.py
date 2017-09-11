@@ -79,7 +79,7 @@ def warp(data, samples, order=1, spline_type=0.0):
         pass
     elif isinstance(samples, list):
         samples = tuple(samples)
-    elif isinstance(samples, np.ndarray) and samples.shape[0] == data.ndim:
+    elif isinstance(samples, np.ndarray) and samples.shape[0] == data.ndim and samples[0].ndim > 0:
         samples = tuple(reversed([samples[i] for i in range(samples.shape[0])]))  # skimage API
     elif data.ndim == 1:
         samples = (samples,)
