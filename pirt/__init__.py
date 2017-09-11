@@ -1,24 +1,4 @@
-""" Pirt - Python Image Registration Toolkit.
-
-Pirt provides functionality for image registration. There is
-functionality for a variety of image registration algorithms. Most
-notably pirt provides an easy way to use the Elastix toolkit. Further
-it implements some algorithms in Numba (Demons and Gravity).
-
-Image registration itself requires several image processing techniques
-and data types, which are also included in this package:
-
-  * pirt.gaussfun - function for Gaussian smoothing and
-    derivatives, image pyramid class
-  * pirt.interp - interpolation of 1D, 2D and 3D data (nearest, linear,
-    and various spline interpolants)
-  * pirt.splinegrid - defines a B-spline grid class (for data up to
-    three dimensions) and a class to describe a deformation grid
-    (consisting of a B-spline grid for each dimension)
-  
-The registration algoriths are in `pirt.reg`.
-
-"""
+""" Pirt - Python Image Registration Toolkit """
 
 from __future__ import absolute_import, print_function, division 
 
