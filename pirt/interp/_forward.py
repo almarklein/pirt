@@ -40,7 +40,8 @@ def project(data, samples):
     samples : tuple with numpy arrays
         Each array specifies the sample position for one dimension (in 
         x-y-z order).  In contrast to warp(), each array must have the same
-        shape as data.
+        shape as data. Can also be a stacked array as in skimage's warp()
+        (in z-y-x order).
     
     Returns
     -------
@@ -60,15 +61,19 @@ def project(data, samples):
         pass
     elif isinstance(samples, list):
         samples = tuple(samples)
+    elif isinstance(samples, np.ndarray) and samples.shape[0] == data.ndim and samples[0].ndim > 0:
+        # skimage API, note that this is z-y-x order!
+        samples = tuple(reversed([samples[i] for i in range(samples.shape[0])]))
     elif data.ndim==1:
         samples = (samples,)
     else:
         raise ValueError("samples must be a tuple of arrays.")
+    
     if len(samples) != data.ndim:
         tmp = "samples must contain as many arrays as data has dimensions."
         raise ValueError(tmp)
     for s in samples:
-        if not isinstance(data, np.ndarray):
+        if not isinstance(s, np.ndarray):
             raise ValueError("values in samples must all be numpy arrays.")
         if s.shape != data.shape:  # note that this is quite a bit more restrictive than in warp()
             raise ValueError("sample arrays must all have the same shape as the data.")

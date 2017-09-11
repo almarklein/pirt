@@ -3,6 +3,8 @@ import time
 import numpy as np
 import pirt
 
+from pirt.utils.testing import raises, run_tests_if_main
+
 
 ## Warp
 
@@ -182,6 +184,157 @@ def test_project3d():
     print('project 3d ok')
 
 
+## Misc
+
+
+def test_awarp():
+    
+    data = np.array([[10, 21, 31], [40, 50, 60], [70, 80, 90]]).astype('float32')
+    samples = np.array([1, 2, 1]) * 2, np.array([0, 1, 0]) / 2
+    order = 1
+    
+    # Cannot use data like this
+    with raises(ValueError):
+        pirt.awarp(data, samples, order)
+    
+    # Data must have sampling and origin
+    data = pirt.Aarray(data, (0.5, 2.0))
+    
+    # Check that using normal warp fails
+    result = pirt.warp(data, samples, order)
+    assert result.tolist() != [21, 60, 21]
+    
+    result = pirt.awarp(data, samples, order)
+    assert result.tolist() == [21, 60, 21]
+    
+
+def test_aproject():
+    
+    data = np.array([[10, 20, 30], [40, 50, 60], [70, 80, 90]]).astype('float32')
+    samples = (np.array([[0, 1, 2], [0, 1, 2], [0, 1, 2]]) * 2,
+               np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2]]) / 2)
+    
+    # Cannot use data like this
+    with raises(ValueError):
+        pirt.aproject(data, samples)
+    
+    # Data must have sampling and origin
+    data = pirt.Aarray(data, (0.5, 2.0))
+    
+    # Check that using normal project fails
+    result = pirt.project(data, samples)
+    assert result.tolist() != data.tolist()
+
+    result = pirt.aproject(data, samples)
+    assert result.tolist() == data.tolist()
+
+
+def test_warp_fails_and_conversions():
+    
+    # Prepare data
+    data = np.array([[10, 21, 31], [40, 50, 60], [70, 80, 90]]).astype('float32')
+    samples = np.array([1, 2, 1]), np.array([0, 1, 0])
+    order = 1
+    
+    # Default
+    result = pirt.warp(data, samples, order)
+    assert result.tolist() == [21, 60, 21]
+    
+    # data argument
+    
+    # Wrong type
+    with raises(ValueError):
+        pirt.warp('not_array', samples, order)
+    
+    # Wrong shape
+    with raises(ValueError):
+        pirt.warp(data.reshape(-1, 1, 1, 1), samples, order)
+    
+    # samples argument
+    
+    # Samples as list -> tuple
+    result = pirt.warp(data, list(samples), order)
+    assert result.tolist() == [21, 60, 21]
+    
+    # Samples as one nd-array (skimage api)
+    result = pirt.warp(data, np.stack(reversed(samples)), order)
+    assert result.tolist() == [21, 60, 21]
+    
+    # Wrong type
+    with raises(ValueError):
+        pirt.warp(data, 'wrong', order)
+    
+    # Inside samples
+    samples2 = (np.array([1, 2, 1]), )
+    with raises(ValueError):
+        pirt.warp(data, samples2, order)
+    samples2 = np.array([1, 2, 1]), 'meh'
+    with raises(ValueError):
+        pirt.warp(data, samples2, order)
+    samples2 = np.array([1, 2, 1]), np.array([0, 1, 0, 2])
+    with raises(ValueError):
+        pirt.warp(data, samples2, order)
+    
+    # order argument
+    
+    # Wrong type
+    with raises(ValueError):
+        pirt.warp(data, samples, [0])
+    
+    # Wrong text
+    with raises(ValueError):
+        pirt.warp(data, samples, 'unknown order')
+    
+    # Wrong int
+    with raises(ValueError):
+        pirt.warp(data, samples, 4)
+
+
+def test_project_fails_and_conversions():
+    
+    data = np.array([[10, 20, 30], [40, 50, 60], [70, 80, 90]]).astype('float32')
+    samples = np.array([[0, 1, 2], [0, 1, 2], [0, 1, 2]]), np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2]])
+    
+    # default
+    result = pirt.project(data, samples)
+    assert result.tolist() == data.tolist()
+    
+    # data argument
+    
+    # Wrong type
+    with raises(ValueError):
+        pirt.project('not_array', samples)
+    
+    # Wrong shape
+    with raises(ValueError):
+        pirt.project(data.reshape(-1, 1, 1, 1), samples)
+    
+    # samples argument
+    
+    # Samples as list -> tuple
+    result = pirt.project(data, list(samples))
+    assert result.tolist() == data.tolist()
+    
+    # Samples as one nd-array (skimage api)
+    result = pirt.project(data, np.stack(reversed(samples)))
+    assert result.tolist() == data.tolist()
+    
+    # Wrong type
+    with raises(ValueError):
+        pirt.project(data, 'wrong')
+    
+    # inside samples - project is more restrictive than warp
+    samples = (np.array([[0, 1, 2], [0, 1, 2], [0, 1, 2]]), )
+    with raises(ValueError):
+        pirt.project(data, samples)
+    samples = np.array([[0, 1, 2], [0, 1, 2], [0, 1, 2]]), 'meh'
+    with raises(ValueError):
+        pirt.project(data, samples)
+    samples = np.array([[0, 1, 2], [0, 1, 2]]), np.array([[0, 0, 0], [1, 1, 1]])
+    with raises(ValueError):
+        pirt.project(data, samples)
+
+
 ## Timings
 
 def test_times_warp():
@@ -261,13 +414,8 @@ def test_times_project():
 
 
 if __name__ == '__main__':
-    test_warp1d()
-    test_warp2d()
-    test_warp3d()
-    
-    test_project1d()
-    test_project2d()
-    test_project3d()
-    
-    test_times_warp()
-    test_times_project()
+    test_awarp()
+    test_aproject()
+    test_warp_fails_and_conversions()
+    test_project_fails_and_conversions()
+    # run_tests_if_main()
