@@ -12,7 +12,8 @@ pipelines:
         script:
           - python --version
           - pip install flit
+          - pip install numpy scipy numba
+          - export FLIT_ROOT_INSTALL=1
           - flit install          
-          #- pip install numpy scipy numba
           - python -c 'import pirt; print(pirt)'
           
