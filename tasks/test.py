@@ -51,6 +51,7 @@ def test_unit(rel_path='.'):
         assert ROOT_DIR in os.path.abspath(m.__path__[0])
     # Start tests
     _enable_faulthandler()
+    _clear_our_modules()
     try:
         res = pytest.main(['--cov', NAME, '--cov-config=.coveragerc',
                            '--cov-report=term', '--cov-report=html', test_path])
@@ -118,3 +119,11 @@ def _enable_faulthandler():
         print('Faulthandler enabled')
     except Exception:
         print('Could not enable faulthandler')
+
+
+def _clear_our_modules():
+    """ Remove ourselves from sys.modules to force an import.
+    """
+    for key in list(sys.modules.keys()):
+        if key.startswith(NAME) and 'testing' not in key:
+            del sys.modules[key]
