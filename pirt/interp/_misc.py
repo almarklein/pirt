@@ -50,7 +50,7 @@ def meshgrid(*args):
 
 
 # todo: this seems not to be used anymore
-@numba.jit
+@numba.jit(nopython=True, nogil=True)
 def uglyRoot(n):
     """ uglyRoot(n)
     Calculates an approximation of the square root using
@@ -114,7 +114,7 @@ def make_samples_absolute(samples):
             make_samples_absolute3(sample_array, result, sampling, d)
     
     # Done
-    return absolute_samples
+    return tuple(absolute_samples)
 
 
 @numba.jit(nopython=True, nogil=True)

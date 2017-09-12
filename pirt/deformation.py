@@ -359,7 +359,7 @@ class Deformation(object):
         # Reverse fields
         deltas = [s for s in reversed(deform)]
         
-        # Make absolyte and return
+        # Make absolute and return
         return pirt.interp.make_samples_absolute(deltas) 
     
     

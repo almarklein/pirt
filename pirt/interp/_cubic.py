@@ -67,7 +67,7 @@ def get_cubic_spline_coefs(t, spline_type=0.0):
     spline_id = spline_type_to_id(spline_type)
     out = np.zeros((4, ), np.float64)
     set_cubic_spline_coefs(t, spline_id, out)
-    return out
+    return tuple(out)
 
 
 @numba.jit(nopython=True)

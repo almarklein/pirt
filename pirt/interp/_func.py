@@ -254,7 +254,7 @@ def zoom(data, factor, order=3, spline_type=0.0, prefilter=False, extra=False):
     """
    
     # Process factor
-    if isinstance(factor, np.ndarray) and np.size == 1:
+    if isinstance(factor, np.ndarray) and factor.size == 1:
         factor = float(factor)
     if isinstance(factor, (float, int)):
         factor = [factor for i in data.shape]
