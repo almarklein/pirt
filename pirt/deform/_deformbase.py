@@ -6,8 +6,6 @@ from .. import Pointset, Aarray
 from .. import interp
 from ..splinegrid import FD
 
-from pirt.splinegrid import _splinegrid
-
 
 class Deformation(object):
     """ Deformation
@@ -299,7 +297,7 @@ class Deformation(object):
             for d in range(def1.ndim):
                 field1 = def1[d]
                 grid2 = def2[d]
-                field = _splinegrid.get_field_at(grid2, sampleLocations)
+                field = grid2.get_field_in_samples(sampleLocations)
                 field = Aarray(field1+field, def1.field_sampling)
                 fields.append(field)
         elif isinstance(def2, DeformationField):

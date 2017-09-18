@@ -1,8 +1,7 @@
 import numpy as np
 
-from pirt import Pointset, Aarray
-
-from . import _splinegrid
+from .. import Pointset, Aarray
+from . import _splinegridfuncs
 
 
 ## Helper classes and functions
@@ -405,7 +404,7 @@ class GridInterface:
 #             newGrid._map('compose', self, other_grid)
 #         elif isinstance(self, SplineGrid):
 #             # Fill the new grid
-#             _splinegrid.get_field_grid(self, newGrid)
+#             _splinegridfuncs.get_field_grid(self, newGrid)
 #             # Add delta to given grid
 #             newGrid._knots += other_grid.knots
 #         else:
@@ -679,7 +678,7 @@ class SplineGrid(GridInterface):
         Obtain the full field that this grid represents. 
         
         """
-        field = _splinegrid.get_field(self)
+        field = _splinegridfuncs.get_field(self)
         return Aarray(field, self.field_sampling)
     
     
@@ -694,7 +693,7 @@ class SplineGrid(GridInterface):
         pp, tmp = self._select_points_inside_field(pp)
         
         # Sample field
-        return _splinegrid.get_field_sparse(self, pp.data)
+        return _splinegridfuncs.get_field_sparse(self, pp.data)
     
     
     def get_field_in_samples(self, samples):
@@ -710,7 +709,7 @@ class SplineGrid(GridInterface):
             raise ValueError('Samples must contain one element per dimension.')
         
         # Sample field
-        return _splinegrid.get_field_at(self, samples)
+        return _splinegridfuncs.get_field_at(self, samples)
     
     
     ## Classmethods to get a grid
@@ -904,7 +903,7 @@ class SplineGrid(GridInterface):
             weights = np.ones_like(field)
         
         # Go
-        _splinegrid.set_field(self, field, weights)
+        _splinegridfuncs.set_field(self, field, weights)
     
     
     def _set_using_points(self, pp, values):
@@ -922,7 +921,7 @@ class SplineGrid(GridInterface):
         pp, values = self._select_points_inside_field(pp, values)
         
         # Go
-        _splinegrid.set_field_sparse(self, pp.data, values)
+        _splinegridfuncs.set_field_sparse(self, pp.data, values)
     
     
     def _refine(self, knots):

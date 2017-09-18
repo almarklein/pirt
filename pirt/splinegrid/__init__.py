@@ -9,5 +9,5 @@ wrap multiple SplineGrid instances in order to represent a vector/tensor
 field (such as color or deformations).
 
 """
-from .splinegrid import GridInterface, SplineGrid, GridContainer, FieldDescription, FD
-from .splinegrid import calculate_multiscale_sampling
+from ._splinegridclasses import GridInterface, SplineGrid, GridContainer, FieldDescription, FD
+from ._splinegridclasses import calculate_multiscale_sampling
