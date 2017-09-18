@@ -24,10 +24,10 @@ from .interp import (get_cubic_spline_coefs, meshgrid,
                      SliceInVolume)
 
 from pirt.splinegrid import SplineGrid, GridContainer, FieldDescription, FD
-from pirt.deformation import (Deformation, DeformationIdentity, 
-                              DeformationGrid, DeformationField,
-                              DeformationGridForward, DeformationFieldForward,
-                              DeformationGridBackward, DeformationFieldBackward)
+from pirt.deform import (Deformation, DeformationIdentity, 
+                         DeformationGrid, DeformationField,
+                         DeformationGridForward, DeformationFieldForward,
+                         DeformationGridBackward, DeformationFieldBackward)
 
 from .utils.randomdeformations import create_random_deformation, RandomDeformations
 

@@ -15,7 +15,7 @@ coordinates, which are expressed using integers x, y, z.
 import numpy as np
 import numba
 
-from .interp._cubic import cubicsplinecoef_basis
+from ..interp._cubic import cubicsplinecoef_basis
 
 
 ## Functions to obtain the field that the grid represents

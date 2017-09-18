@@ -1,5 +1,4 @@
 # flake8: noqa
-
 """ Module interp
 
 Exposes several functions for interpolation, implemented in Numba.

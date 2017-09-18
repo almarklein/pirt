@@ -2,7 +2,7 @@ import numpy as np
 import visvis as vv
 
 from pirt import SplineGrid, FD, GridContainer
-from pirt.splinegrid import _calculate_multiscale_sampling
+from pirt.splinegrid import calculate_multiscale_sampling
 from pirt.utils.testing import raises, run_tests_if_main
 
 
@@ -757,7 +757,7 @@ def test_calculate_multiscale_sampling():
     # From grid and one value
     
     fd = FD((100, 200), (2, 2))
-    mi, ma = _calculate_multiscale_sampling(SplineGrid(fd, 1), 10)
+    mi, ma = calculate_multiscale_sampling(SplineGrid(fd, 1), 10)
     assert mi == 10
     assert ma > 200 * 2 and ma / 2 < 200 * 2
     assert ma > 10
@@ -766,7 +766,7 @@ def test_calculate_multiscale_sampling():
     assert mi == ma
     
     fd = FD((2, 9), (0.2, 0.2))
-    mi, ma = _calculate_multiscale_sampling(SplineGrid(fd, 1), 10)
+    mi, ma = calculate_multiscale_sampling(SplineGrid(fd, 1), 10)
     assert mi == 10
     assert ma == 10
     while ma > mi:
@@ -774,7 +774,7 @@ def test_calculate_multiscale_sampling():
     assert mi == ma
     
     fd = FD((2, 9), (3, 3))
-    mi, ma = _calculate_multiscale_sampling(SplineGrid(fd, 1), 10)
+    mi, ma = calculate_multiscale_sampling(SplineGrid(fd, 1), 10)
     assert mi == 10
     assert ma > 9 * 3 and ma / 2 < 9 * 3
     assert ma > 10
@@ -784,19 +784,19 @@ def test_calculate_multiscale_sampling():
     
     # From two values, selects such that ma is power-of-two of mi
     
-    mi, ma = _calculate_multiscale_sampling(None, (10, 10))
+    mi, ma = calculate_multiscale_sampling(None, (10, 10))
     assert (mi, ma) == (10, 10)
     while ma > mi:
         ma /= 2
     assert mi == ma
     
-    mi, ma = _calculate_multiscale_sampling(None, (3, 17))
+    mi, ma = calculate_multiscale_sampling(None, (3, 17))
     assert (mi, ma) == (3, 12)
     while ma > mi:
         ma /= 2
     assert mi == ma
     
-    mi, ma = _calculate_multiscale_sampling(None, (3, 18))
+    mi, ma = calculate_multiscale_sampling(None, (3, 18))
     assert (mi, ma) == (3, 24)
     while ma > mi:
         ma /= 2

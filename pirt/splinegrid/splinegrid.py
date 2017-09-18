@@ -1,17 +1,6 @@
-""" Module pirt.splinegrid
-
-This module implements functionality for spline grids. The GridInterface
-class is the base class that enables basic grid properties and 
-functionality. The SplineGrid class implements an actual grid that 
-represents a scalar field. The GridContainer class can be used to
-wrap multiple SplineGrid instances in order to represent a vector/tensor
-field (such as color or deformations).
-
-"""
-
 import numpy as np
 
-from pirt.utils import Pointset, Aarray
+from pirt import Pointset, Aarray
 
 from . import _splinegrid
 
@@ -134,8 +123,8 @@ class FieldDescription:
 FD = FieldDescription
 
 
-def _calculate_multiscale_sampling(grid, sampling):
-    """ _calculate_multiscale_sampling(grid, sampling)
+def calculate_multiscale_sampling(grid, sampling):
+    """ calculate_multiscale_sampling(grid, sampling)
     Calculate the minimal and maximal sampling from user input.
     """
     
@@ -477,7 +466,7 @@ class GridInterface:
         
         # Get sampling
         tmp = GridInterface(field, 1)
-        sMin, sMax = _calculate_multiscale_sampling(tmp, sampling)
+        sMin, sMax = calculate_multiscale_sampling(tmp, sampling)
         s, sRef = sMax, sMin*0.9
         
         # Init refined grid (starts with highest sampling)
