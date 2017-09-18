@@ -4,7 +4,7 @@
 import numpy as np
 import numba
 
-from ..utils import Point, Aarray
+from .. import Point, Aarray
 from ._backward import warp
 
 

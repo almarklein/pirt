@@ -11,10 +11,14 @@ if sys.version_info < (3, 4):
 
 # Imports 
 
-from .utils import Point, Pointset, Aarray
+# todo: replace these with better versions ...
+from visvis import Aarray
+from visvis import Point, Pointset
+from visvis import ssdf
 
 from .gaussfun import (gaussiankernel, gfilter, gfilter2,
                        diffusionkernel, diffuse, diffuse2)
+
 from .pyramid import ScaleSpacePyramid
 
 from .interp import (get_cubic_spline_coefs, meshgrid,
@@ -24,14 +28,20 @@ from .interp import (get_cubic_spline_coefs, meshgrid,
                      SliceInVolume)
 
 from pirt.splinegrid import SplineGrid, GridContainer, FieldDescription, FD
+
 from pirt.deform import (Deformation, DeformationIdentity, 
                          DeformationGrid, DeformationField,
                          DeformationGridForward, DeformationFieldForward,
                          DeformationGridBackward, DeformationFieldBackward)
 
-from .utils.randomdeformations import create_random_deformation, RandomDeformations
-
 from . import reg
+
+
+# Some utils need to be imported to use them
+from .randomdeformations import RandomDeformations, create_random_deformation
+# from . import experiment
+# from . import deformvis
+# from . import testing
 
 # Clean up
 del sys

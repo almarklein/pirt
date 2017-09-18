@@ -5,7 +5,7 @@ import numpy as np
 import scipy.ndimage
 
 import pirt
-from pirt.utils import Aarray
+from pirt import Aarray
 from .reg_base import GDGRegistration, BaseRegistration, create_grid_image
 
 

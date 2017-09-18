@@ -22,7 +22,7 @@ else:
 
 # Deform image
 scale = im1.shape[0] * 0.4
-rd = pirt.utils.create_random_deformation(im1,40, 40, mapping='backward',seed=1001)
+rd = pirt.create_random_deformation(im1,40, 40, mapping='backward',seed=1001)
 im2 = rd.apply_deformation(im1)
 
 # Add noise

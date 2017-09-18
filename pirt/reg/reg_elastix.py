@@ -2,7 +2,7 @@
 """
 
 from .reg_base import AbstractRegistration
-from pirt.utils import ssdf 
+from pirt import ssdf 
 from pirt import DeformationFieldBackward
 from .pyelastix import Elastix
 

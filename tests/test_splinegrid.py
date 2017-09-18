@@ -3,7 +3,7 @@ import visvis as vv
 
 from pirt import SplineGrid, FD, GridContainer
 from pirt.splinegrid import calculate_multiscale_sampling
-from pirt.utils.testing import raises, run_tests_if_main
+from pirt.testing import raises, run_tests_if_main
 
 
 class Struct:

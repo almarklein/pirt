@@ -2,7 +2,7 @@ import numpy as np
 import visvis as vv
 
 from pirt import SplineGrid
-from pirt.utils import Point, Pointset
+from pirt import Point, Pointset
 from pirt import interp
 
 

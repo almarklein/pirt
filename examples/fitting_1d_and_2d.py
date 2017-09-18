@@ -7,7 +7,7 @@ import numpy as np
 import visvis as vv
 
 from pirt import Pointset, Aarray
-from pirt.utils import fitting
+from pirt import fitting
 
 vv.figure(1)
 vv.clf()

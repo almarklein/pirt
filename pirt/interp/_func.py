@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..gaussfun import diffuse
-from ..utils import Aarray
+from .. import Aarray
 
 from ._backward import warp, awarp  # noqa
 from ._forward import project, aproject  # noqa

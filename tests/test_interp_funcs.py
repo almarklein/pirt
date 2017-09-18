@@ -4,7 +4,7 @@
  
 import numpy as np
 import pirt
-from pirt.utils.testing import raises, run_tests_if_main
+from pirt.testing import raises, run_tests_if_main
 
 
 def test_deform():

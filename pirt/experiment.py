@@ -14,7 +14,7 @@ import os
 import hashlib
 
 import numpy as np
-from pirt.utils import ssdf
+from pirt import ssdf
 
 
 class Database:

@@ -5,7 +5,7 @@ Defines the base registration object.
 import time
 import numpy as np
 import pirt
-from pirt.utils import ssdf, Aarray
+from pirt import ssdf, Aarray
 from pirt import (Deformation, DeformationGridForward, DeformationFieldForward,
                   DeformationGridBackward, DeformationFieldBackward)
 

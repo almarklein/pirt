@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.linalg
-from pirt.utils import Pointset
+from pirt import Pointset
 
 
 if True:
