@@ -31,7 +31,7 @@ def test(ctx, unit='', style='', cover=False):
         show_coverage_html()
 
 
-def test_unit(rel_path='.'):
+def test_unit(rel_path=''):
     # Ensure we have pytest
     try:
         import pytest  # noqa
@@ -40,7 +40,7 @@ def test_unit(rel_path='.'):
     if rel_path:
         test_paths = []
         for fname in os.listdir(os.path.join(ROOT_DIR, 'tests')):
-            if rel_path in fname:
+            if fname.endswith('.py') and rel_path in fname:
                 test_paths.append(os.path.join(ROOT_DIR, 'tests', fname))
     else:
         test_paths = [os.path.join(ROOT_DIR, 'tests')]

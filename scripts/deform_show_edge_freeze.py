@@ -1,3 +1,8 @@
+"""
+Example/test illustrating how the knots of the B-spline grid are modified
+to freeze the edges of the underlying field.
+"""
+
 import pirt
 import visvis as vv
 import numpy as np
@@ -30,7 +35,7 @@ def _freeze_edges(self):
                 # Get t factor and coefficients
                 t = get_t_factor(grid, d)
                 c1, c2, c3, c4 = pirt.get_cubic_spline_coefs(t, 'B')
-                print 't', t, c1, c2, c3, c4
+                print('t', t, c1, c2, c3, c4)
                 
                 # bottom/right
                 grid._knots[-3] = (1-t)*grid._knots[-3]
@@ -71,4 +76,3 @@ a.SetLimits(margin=0.1)
 f.relativeFontSize = 1.4
 f.position.h = 300
 f.position.w = 600
-# vv.screenshot('c:/almar/projects/example1D_freeze_edges.jpg', vv.gcf(), bg='w', sf=2)

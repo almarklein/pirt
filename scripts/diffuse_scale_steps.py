@@ -1,5 +1,5 @@
 """
-Illustate the levels in a scals space pyramid.
+Illustate the levels in a scale space pyramid.
 """
 
 import visvis as vv

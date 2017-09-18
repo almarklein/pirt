@@ -1,38 +1,49 @@
+"""
+Illustrate the kind of mass images that the Gravity registration
+algororithm makes to base the image forces on. Normalization of these
+images is an important part of making Gravity robust.
+"""
+
 import sys, os, time
+
 import visvis as vv
 import numpy as np
-import pirt
-from visvis import ssdf
 import scipy.ndimage
+import imageio
+import pirt
 
-# Define home directory
-homeDir = '/home/almar/'
-if sys.platform.startswith('win'):
-    homeDir = 'c:/almar/'
 
 # Init ims
 ims = []
 
-# Add lena
-im1 = vv.imread(homeDir+'data/images/lena_distorted00.png')
-im1 = im1[::2,::2].astype(np.float32)
-ims.append(im1)
+# Add astronaut
+ims.append(imageio.imread('imageio:astronaut.png')[:,:,1].astype('float32'))
 
-# Add MRI
-s = ssdf.load(homeDir+'projects/brainwebExample.bsdf')
-ims.append(s.im1)
+# Add slice from stent image
+ims.append(imageio.volread('imageio:stent.npz')[:,90,:].astype('float32'))
 
-# Add sparse
-s = ssdf.load(os.path.join(homeDir, 'projects/py/pirt/data/reg2D_simdata.ssdf'))
-im1 = pirt.diffuse(s.im1,0.5)
-im1 = im1 + np.random.normal(0.0, 0.1, im1.shape)
-ims.append(im1)
+ims.append(imageio.imread('imageio:wikkie.png')[:,:,1].astype('float32'))
+
+# # Add sparse
+# s = ssdf.load(os.path.join(homeDir, 'projects/py/pirt/data/reg2D_simdata.ssdf'))
+# im1 = pirt.diffuse(s.im1,0.5)
+# im1 = im1 + np.random.normal(0.0, 0.1, im1.shape)
+# ims.append(im1)
 
 
 def normalize(mass):
     mass *= (1/mass.std()) # i.e. mass = mass / (2*std)
     mass += (-0.5-mass.mean()) # i.e. move mean to 1.0
     return mass
+
+
+def soft_limit(data, limit):
+    if limit == 1:
+        data[:] = 1.0 - np.exp(-data)
+    else:
+        f = np.exp(-data/limit)
+        data[:] = -limit * (f-1)
+
 
 def getMass(im, truncate=True):
     
@@ -54,7 +65,7 @@ def getMass(im, truncate=True):
     # Truncate
     if truncate:
         mass[mass<0] = 0.0
-    reg._soft_limit(mass, 1) # todo: half limit
+    soft_limit(mass, 1) # todo: half limit
     #mass = mass**0.5
     
     return mass

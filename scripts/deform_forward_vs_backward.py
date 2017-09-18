@@ -1,3 +1,8 @@
+"""
+This example illustrates the same deformation in forward and backward mode.
+Then this deformation is scaled by half and one can see how the result of
+the backward deformation is wrong; backward deformations cannot be scaled.
+"""
 
 import visvis as vv
 import numpy as np
@@ -34,6 +39,7 @@ def patch_image(im, patch, pos):
     given (pixel) position).
     
     """
+    pos = tuple(int(p) for p in pos)
     
     # Get tail
     tail = int(np.ceil( patch.shape[0]/2 ))
@@ -56,14 +62,14 @@ def patch_image(im, patch, pos):
             pos3[d] = -pos1[d]
             pos1[d] = 0
         if pos2[d] >= im.shape[d]:
-            pos4[d] = im.shape[d] - pos2[d] - 2
+            pos4[d] = im.shape[d] - pos2[d]
             pos2[d] = im.shape[d] - 1
     
     # Build slice objects
     slices_im = []
     slices_patch = []
     for d in range(im.ndim):
-        slices_im.append( slice(pos1[d],pos2[d]+1) )
+        slices_im.append(slice(pos1[d],pos2[d]+1) )
         slices_patch.append( slice(pos3[d],pos4[d]+1) )
     
     # Put patch in 
@@ -141,10 +147,10 @@ deform_forward2 = deform_forward.scale(0.5)
 deform_backward2 = deform_backward.scale(0.5)
 
 # Apply the deform to the images
-im_forward =  deform_forward.apply_deformation(im)
-im_forward2 =  deform_forward2.apply_deformation(im)
-im_backward =  deform_backward.apply_deformation(im)
-im_backward2 =  deform_backward2.apply_deformation(im)
+im_forward = deform_forward.apply_deformation(im)
+im_forward2 = deform_forward2.apply_deformation(im)
+im_backward = deform_backward.apply_deformation(im)
+im_backward2 = deform_backward2.apply_deformation(im)
 
 
 # Calculate vectors
@@ -172,51 +178,49 @@ for y in np.arange(0, im.shape[0], vecstep):
 
 # Show
 
-if True:
-    f = vv.figure(1); vv.clf()
-    f.position = 120,100, 1150, 500
-    clim = (0.0,1.5)
-    cmap = (0,0,0), (0.5, 1.0, 1.0)
-    veccolor = 'w'
-    #
-    a1 = vv.subplot(241); 
-    vv.imshow(im, clim=clim, cm=cmap)
-    #
-    a2 = vv.subplot(242); 
-    vv.imshow(deform_forward[1])    
-    #
-    a3 = vv.subplot(243); 
-    vv.imshow(im_forward, clim=clim, cm=cmap)
-    arrows(pp, vvf, (0.2, 0.9), lc=veccolor, lw=2, axesAdjust=False)
-    #
-    a4 = vv.subplot(244); 
-    vv.imshow(im_forward2, clim=clim, cm=cmap)
-    arrows(pp, vvf2, (0.2, 0.9), lc=veccolor, lw=2, axesAdjust=False)
-    
-    a5 = vv.subplot(245); 
-    vv.imshow(im, clim=clim, cm=cmap)
-    #
-    a6 = vv.subplot(246); 
-    vv.imshow(deform_backward[1])    
-    #
-    a7 = vv.subplot(247); 
-    vv.imshow(im_backward, clim=clim, cm=cmap)
-    arrows(pp, vvb, (0.2, 0.9), lc=veccolor, lw=2, axesAdjust=False)
-    #
-    a8 = vv.subplot(248); 
-    vv.imshow(im_backward2, clim=clim, cm=cmap)
-    arrows(pp, vvb2, (0.2, 0.9), lc=veccolor, lw=2, axesAdjust=False)
-    
-    #
-    for a in [a1, a2, a3, a4]:
-        a.axis.visible = False
-    for a in [a5, a6, a7, a8]:
-        a.axis.visible = False
-    
+f = vv.figure(1); vv.clf()
+f.position = 120,100, 1150, 500
+clim = (0.0,1.5)
+cmap = (0,0,0), (0.5, 1.0, 1.0)
+veccolor = 'w'
+#
+a1 = vv.subplot(241); vv.title('Input image')
+vv.imshow(im, clim=clim, cm=cmap)
+#
+a2 = vv.subplot(242); vv.title('Forward deform field')
+vv.imshow(deform_forward[1])    
+#
+a3 = vv.subplot(243); vv.title('Forward field vectors')
+vv.imshow(im_forward, clim=clim, cm=cmap)
+arrows(pp, vvf, (0.2, 0.9), lc=veccolor, lw=2, axesAdjust=False)
+#
+a4 = vv.subplot(244); vv.title('Vectors scaled by half')
+vv.imshow(im_forward2, clim=clim, cm=cmap)
+arrows(pp, vvf2, (0.2, 0.9), lc=veccolor, lw=2, axesAdjust=False)
+
+a5 = vv.subplot(245); vv.title('Input image')
+vv.imshow(im, clim=clim, cm=cmap)
+#
+a6 = vv.subplot(246); vv.title('Backward deform field')
+vv.imshow(deform_backward[1])    
+#
+a7 = vv.subplot(247); vv.title('Backward field vectors') 
+vv.imshow(im_backward, clim=clim, cm=cmap)
+arrows(pp, vvb, (-0.2, 0.9), lc=veccolor, lw=2, axesAdjust=False)
+#
+a8 = vv.subplot(248); vv.title('Vectors scaled by half')
+vv.imshow(im_backward2, clim=clim, cm=cmap)
+arrows(pp, vvb2, (-0.2, 0.9), lc=veccolor, lw=2, axesAdjust=False)
+
+#
+for a in [a1, a2, a3, a4]:
+    a.axis.visible = False
+for a in [a5, a6, a7, a8]:
+    a.axis.visible = False
 
 
 if False:
-    vv.screenshot('c:/almar/projects/forwardVSbackward1.jpg', a1, sf=2)
-    vv.screenshot('c:/almar/projects/forwardVSbackward2.jpg', a2, sf=2)
-    vv.screenshot('c:/almar/projects/forwardVSbackward3.jpg', a3, sf=2)
-    vv.screenshot('c:/almar/projects/forwardVSbackward4.jpg', a4, sf=2)
+    vv.screenshot('~/forwardVSbackward1.jpg', a1, sf=2)
+    vv.screenshot('~/forwardVSbackward2.jpg', a2, sf=2)
+    vv.screenshot('~/forwardVSbackward3.jpg', a3, sf=2)
+    vv.screenshot('~/forwardVSbackward4.jpg', a4, sf=2)

@@ -22,7 +22,7 @@ else:
 
 # Deform image
 scale = im1.shape[0] * 0.4
-rd = pirt.randomDeformations.create_random_deformation(im1,40, 40, mapping='backward',seed=1001)
+rd = pirt.utils.create_random_deformation(im1,40, 40, mapping='backward',seed=1001)
 im2 = rd.apply_deformation(im1)
 
 # Add noise
@@ -35,7 +35,7 @@ fig = vv.figure(1); vv.clf()
 fig.position = 200,100, 900, 500
 
 # Init registration
-reg = pirt.GravityRegistration(im1, im2)
+reg = pirt.reg.GravityRegistration(im1, im2)
 
 if isinstance(reg, pirt.DiffeomorphicDemonsRegistration):
     reg.params.speed_factor = 2
@@ -71,5 +71,5 @@ for def1, def2 in zip(rd, deform):
     parts.append(def1-def2)
 D = (parts[0]**2 + parts[1]**2)**0.5            
 #
-print 'error', err.mean()/refErr.mean(), D.mean()
+print('error', err.mean()/refErr.mean(), D.mean())
 vv.imshow(D)

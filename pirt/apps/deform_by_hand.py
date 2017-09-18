@@ -1,15 +1,11 @@
 import time
 
+import visvis as vv
+
 from pirt import FieldDescription
-from pirt import ( DeformationGridForward, DeformationFieldForward,
-                    DeformationGridBackward, DeformationFieldBackward)
+from pirt import (DeformationGridForward, DeformationFieldForward,
+                  DeformationGridBackward, DeformationFieldBackward)
 from pirt.utils import Point, Pointset
-
-try:
-    import visvis as vv
-except ImportError:
-    vv = None
-
 
 
 class DeformByHand:
@@ -20,14 +16,9 @@ class DeformByHand:
     Use the grid property to obtain the deformation grid.
     Use the run() method to wait for the user to close the figure.
     
-    
     """
     
     def __init__(self, im, grid_sampling=40):
-        
-        # Check visvis
-        if vv is None:
-            raise RuntimeError('Require visvis.')
         
         # Store image
         self._im = im
@@ -82,7 +73,6 @@ class DeformByHand:
         self._line2 = vv.plot(tmp, ls='+', lc='c', lw='2', axes=a2)
         
         # Init grid properties
-        self._spline_type = 'Basic'
         self._sampling = grid_sampling
         self._levels = 5
         self._multiscale = True
@@ -108,8 +98,6 @@ class DeformByHand:
     
     def on_key_down(self, event):
         
-        spline_types ={'Basic':'Cardinal', 'Cardinal':'Linear', 'Linear':'Basic'}
-        
         # Update level
         if event.key == vv.KEY_UP:
             self._sampling += 2
@@ -120,8 +108,6 @@ class DeformByHand:
         elif event.key == vv.KEY_LEFT:
             self._levels -= 1
         #
-        elif event.text.upper() == 'S':
-            self._spline_type = spline_types[self._spline_type] # Next!
         elif event.text.upper() == 'M':
             self._multiscale = not self._multiscale
         elif event.text.upper() == 'I':
@@ -247,16 +233,14 @@ class DeformByHand:
         elif self._multiscale:
             deform = self.DeformationField.from_points_multiscale(self._im, grid_sampling, 
                         self._pp1, self._pp2,
-                        injective=self._injective, frozenedge=self._frozenedge,
-                        spline_type=self._spline_type)
+                        injective=self._injective, frozenedge=self._frozenedge)
         else:
             DeformationGrid = DeformationGridForward
             if not self._forward:
                 DeformationGrid = DeformationGridBackward
             grid = DeformationGrid.from_points(self._im, self._sampling, 
                         self._pp1, self._pp2, 
-                        injective=self._injective, frozenedge=self._frozenedge,
-                        spline_type=self._spline_type)
+                        injective=self._injective, frozenedge=self._frozenedge)
             deform = grid.as_deformation_field()
         
         # Store grid
@@ -291,8 +275,8 @@ class DeformByHand:
         self._a2.Draw()
         
         # Show text
-        text1 = '%s spline (S) with sampling %i (U/D) and %i levels (L/R).' % (
-            self._spline_type, self._sampling, self._levels)
+        text1 = 'B-spline (S) with sampling %i (U/D) and %i levels (L/R).' % (
+            self._sampling, self._levels)
         
         text2 = 'Multiscale %i (M), injective %1.1f (I), frozen edge %i (E), forward %i (F).' % (
             self._multiscale, self._injective, self._frozenedge, self._forward)
@@ -318,19 +302,17 @@ class DeformByHand:
         while not self._closed:
             time.sleep(0.02)
             vv.processEvents()
+        
+        self.apply_deform()
 
 
 if __name__ == '__main__':
-    # v = SplineByHand()
-
-    d = None
-    d = DeformByHand(vv.imread('lena.png')[:,:,2].astype('float32'))
+    
+    d = DeformByHand(vv.imread('astronaut.png')[:,:,2].astype('float32'))
     
     WHAT = 'twist'
     
-    if not d:
-        pass    
-    elif WHAT == 'twist':
+    if WHAT == 'twist':
         d._pp1.append(108.27,       416.57 )
         d._pp1.append(330.78,       385.58 )
         d._pp1.append(220.08,       393.32 )

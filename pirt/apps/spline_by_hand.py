@@ -1,27 +1,18 @@
 import numpy as np
+import visvis as vv
 
 from pirt import SplineGrid
 from pirt.utils import Point, Pointset
 from pirt import interp
-
-try:
-    import visvis as vv
-except ImportError:
-    vv = None
 
 
 class SplineByHand:
     """ SplineByHand()
     
     Demo application to influence a 1D spline grid using control points.
-    
     """
     
     def __init__(self):
-        
-        # Check visvis
-        if vv is None:
-            raise RuntimeError('Require visvis.')
         
         # Setup visualization
         self._fig = fig = vv.figure()
@@ -35,7 +26,6 @@ class SplineByHand:
         self._line1.hitTest = True
         
         # Init grid properties
-        self._spline_type = 'B'
         self._fieldSize = 100
         self._sampling = 10
         self._levels = 5
@@ -50,6 +40,8 @@ class SplineByHand:
         self._line1.eventMouseUp.Bind(self.on_up_line)
         a1.eventMotion.Bind(self.on_motion)
         fig.eventKeyDown.Bind(self.on_key_down)
+        
+        print('Use left/right to control #levels and up/down to control grid sampling.')
         
         # Init
         self.apply()
@@ -69,14 +61,6 @@ class SplineByHand:
             self._levels += 1
         elif event.key == vv.KEY_LEFT:
             self._levels -= 1
-        #
-        elif event.text.upper() == 'B':
-            self._spline_type = 'B'
-        elif event.text.upper() == 'C':
-            self._spline_type = 'C'
-        elif event.text.upper() == 'L':
-            self._spline_type = 'linear'
-        #
         else:
             return
         
@@ -85,8 +69,8 @@ class SplineByHand:
             self._sampling = 1
         
         # Apply and print
-        print('Using %s grid with %i sampling and %i levels.' % (
-                self._spline_type, self._sampling, self._levels))
+        print('Using B-spline grid with %i sampling and %i levels.' % (
+                self._sampling, self._levels))
         self.apply()
     
     
@@ -178,7 +162,7 @@ class SplineByHand:
         tmp.shape = (tmp.size,1)
         pp = Pointset(tmp)
         grid1 = SplineGrid.from_points_multiscale((self._fieldSize,), grid_sampling,
-                        pp, self._pp[:,1], spline_type=self._spline_type )
+                        pp, self._pp[:,1])
         
         # Get copy
         grid2 = grid1.copy()
@@ -187,10 +171,8 @@ class SplineByHand:
         self.freeze_edges(grid1)
         
 #         # Create second grid
-#         grid2 = SplineGrid.from_field(grid.get_field(), grid.grid_sampling, 
-#             spline_type=self._spline_type)
-#         grid3 = SplineGrid.from_field_multiscale(grid.get_field(), grid.grid_sampling,
-#             spline_type=self._spline_type)
+#         grid2 = SplineGrid.from_field(grid.get_field(), grid.grid_sampling)
+#         grid3 = SplineGrid.from_field_multiscale(grid.get_field(), grid.grid_sampling)
         
         # Get grid points
         ppg1 = Pointset(2)
@@ -256,5 +238,4 @@ class SplineByHand:
 
 if __name__ == '__main__':
     v = SplineByHand()
-
-    
+    vv.use().Run()
