@@ -1,5 +1,6 @@
 # Atempt at Cuda implementation, but so far it is slower than the normal one.
 
+import numba
 from numba import cuda
 
 

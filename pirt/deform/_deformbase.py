@@ -2,7 +2,7 @@ import time  # noqa
 
 import numpy as np
 
-from .. import Pointset, Aarray
+from .. import Aarray
 from .. import interp
 from ..splinegrid import FD
 

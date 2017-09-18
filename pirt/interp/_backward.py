@@ -115,16 +115,16 @@ def warp(data, samples, order=1, spline_type=0.0):
     result = np.empty(samples[0].shape, data.dtype)  # shape of samples, dtype of data
     
     # Enable cuda. Only implemented for 2D. Looks like its even slower, oddly enough.
-    cuda = False
-    if cuda:  # nocov
-        threadsperblock = 64
-        blockspergrid = (result.size + (threadsperblock - 1)) # threadperblock
-        samples = [cuda.to_device(s) for s in samples]
-        data = cuda.to_device(data)
-        warp2_cuda[blockspergrid, threadsperblock](data,
-            result.ravel(), samples[0].ravel(), samples[1].ravel(), order, spline_id)
-        # result_cuda_.copy_to_host(result)  # only this array is copied back
-        return result
+    # cuda = False
+    # if cuda:  # nocov
+    #     threadsperblock = 64
+    #     blockspergrid = (result.size + (threadsperblock - 1)) # threadperblock
+    #     samples = [cuda.to_device(s) for s in samples]
+    #     data = cuda.to_device(data)
+    #     warp2_cuda[blockspergrid, threadsperblock](data,
+    #         result.ravel(), samples[0].ravel(), samples[1].ravel(), order, spline_id)
+    #     # result_cuda_.copy_to_host(result)  # only this array is copied back
+    #     return result
     
     # Go
     if data.ndim == 1:
