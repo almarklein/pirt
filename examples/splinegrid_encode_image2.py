@@ -5,7 +5,7 @@ create a B-spline grid from a discrete field.
 
 import numpy as np
 import visvis as vv
-from pirt import Pointset, SplineGrid
+from pirt import SplineGrid
 
 
 # Read image

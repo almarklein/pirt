@@ -27,11 +27,11 @@ for i in range(len(tt)):
     vv3[i] = cc[3]
     vvt[i] = sum(cc)
 
-# Interpolate
+# Interpolate (0 means Cardinal with tension 0)
 samples = np.arange(0,len(data)-1,0.05, dtype=np.float32) 
 values1 = pirt.warp(np.array(data, dtype=np.float32), samples, 3, 'linear')
 values2 = pirt.warp(np.array(data, dtype=np.float32), samples, 3, 'basis')
-values3 = pirt.warp(np.array(data, dtype=np.float32), samples, 3, 0)  # i.e. Cardinal with tension 0
+values3 = pirt.warp(np.array(data, dtype=np.float32), samples, 3, 0)  
 
 
 # Visualize

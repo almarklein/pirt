@@ -1,6 +1,8 @@
 
 ## Init
 
+from functools import reduce
+
 import pirt
 import visvis as vv
 import numpy as np
@@ -13,7 +15,7 @@ for i in range(4):
     # Create empy image
     im = np.random.normal(0.0, 0.1, (101,101)).astype('float32')
     # Create circle
-    circLoc = circLocs [i]
+    circLoc = circLocs[i]
     for y in range(im.shape[0]):
         for x in range(im.shape[1]):
             #if (y-circLoc[0])**2 + (x-circLoc[1])**2 < radius**2: # circles
@@ -125,11 +127,11 @@ for i in range(N): # for all images
             theDeform += fourDeforms[k].scale(cc[k])
         
         # Map all images there
-#         deform2 = theDeform.as_forward() # forward introduces smoothing!
+        # deform2 = theDeform.as_forward() # forward introduces smoothing!
         deform2 = theDeform.as_backward()
         combined_im = None
         for k in range(N):
-#             deform1 = reg.get_deform(k).as_forward()
+            # deform1 = reg.get_deform(k).as_forward()
             deform1 = reg.get_deform(k).as_backward()
             im = deform1.compose(deform2).apply_deformation(ims[k])
             if combined_im is None:

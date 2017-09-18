@@ -2,9 +2,10 @@
 """
 
 import numpy as np
-import pirt
+
 from pirt import ScaleSpacePyramid
-from pirt import Point, Pointset, Aarray
+from pirt import Aarray
+
 
 class Demo2D:
     def __init__(self, im):
@@ -17,7 +18,7 @@ class Demo2D:
         maxLevel, maxSigma = self._p.calculate()
         
         # Init visualization
-        fig = vv.figure(1); vv.clf()
+        vv.figure(1); vv.clf()
         self._axes = axes = vv.gca()
         axes.position.Correct(dy=40, dh=-40)
         
@@ -118,16 +119,16 @@ if __name__ == '__main__':
     d = Demo2D3(im, 1.5)
     vv.use().Run()
 
-if 0:
+    if 0:
 
-## Diffusionkernel vs Gaussiankernel
-    import pirt
-    import visvis as vv
-    
-    sigma = 300
-    k1, t1 = pirt.diffusionkernel(sigma, returnt=True)
-    k2, t2 = pirt.gaussiankernel(sigma, returnt=True)
-    
-    vv.figure()
-    vv.plot(t1, k1, lc='r', ls=':')
-    vv.plot(t2, k2, lc='b')
+        ## Diffusionkernel vs Gaussiankernel
+        import pirt
+        import visvis as vv
+        
+        sigma = 300
+        k1, t1 = pirt.diffusionkernel(sigma, returnt=True)
+        k2, t2 = pirt.gaussiankernel(sigma, returnt=True)
+        
+        vv.figure()
+        vv.plot(t1, k1, lc='r', ls=':')
+        vv.plot(t2, k2, lc='b')

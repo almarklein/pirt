@@ -4,8 +4,6 @@ algororithm makes to base the image forces on. Normalization of these
 images is an important part of making Gravity robust.
 """
 
-import sys, os, time
-
 import visvis as vv
 import numpy as np
 import scipy.ndimage

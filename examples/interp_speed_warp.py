@@ -4,7 +4,6 @@ Example that demonstrates that Pirt's warp() function is over 4x faster than ski
 
 from time import perf_counter
 
-import numba
 import imageio
 import numpy as np
 import visvis as vv

@@ -11,7 +11,7 @@ is the most "natural" cubic spline.
 import numpy as np
 import visvis as vv
 import pirt
-from pirt import Pointset, Point
+from pirt import Pointset
 
 
 # Input

@@ -1,4 +1,5 @@
-import sys, os
+import os
+import sys
 import pirt
 import visvis as vv
 import numpy as np

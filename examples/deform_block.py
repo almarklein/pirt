@@ -32,11 +32,13 @@ pp.append(85, 85)
 pp = pp * vv.Point(*reversed(im0.sampling))
 
 # Get down-deformation and right-deformation
-deform1 = DeformationFieldBackward.from_points_multiscale(im0, 4, pp[0:1], pp[1:2],
-                                                          injective=INJECTIVE, frozenedge=FREEZE_EDGES)
+from_points_multiscale = DeformationFieldBackward.from_points_multiscale
 
-deform2 = DeformationFieldBackward.from_points_multiscale(im0, 4, pp[1:2], pp[2:3],
-                                                          injective=INJECTIVE, frozenedge=FREEZE_EDGES)
+deform1 = from_points_multiscale(im0, 4, pp[0:1], pp[1:2],
+                                 injective=INJECTIVE, frozenedge=FREEZE_EDGES)
+
+deform2 = from_points_multiscale(im0, 4, pp[1:2], pp[2:3],
+                                 injective=INJECTIVE, frozenedge=FREEZE_EDGES)
 
 # Combine the two, by composition, not by addition!
 deform3 = deform1.compose(deform2)

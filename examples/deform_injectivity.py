@@ -52,7 +52,8 @@ else:
 
 # Deform
 def deform_and_show(injective):
-    deform = pirt.DeformationFieldForward.from_points_multiscale(im, 10, pp1, pp2, injective=injective, frozenedge=True)
+    from_points_multiscale = pirt.DeformationFieldForward
+    deform = from_points_multiscale(im, 10, pp1, pp2, injective=injective, frozenedge=True)
     deform.show()
 
 # Show

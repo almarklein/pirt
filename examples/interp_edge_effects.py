@@ -4,8 +4,7 @@ Visualize interpolation edge effects.
 
 import numpy as np
 import visvis as vv
-import pirt
-from pirt import resize, imresize
+from pirt import resize
 
 
 # Create low resolution image
