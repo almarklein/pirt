@@ -10,10 +10,11 @@ Welcome to Pirt's documentation!
    :maxdepth: 1
    :caption: Contents:
    
+   gaussfun
    interp
    deform
    splinegrid
-   gaussfun
+   reg
    apps
 
 

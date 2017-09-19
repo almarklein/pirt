@@ -1,5 +1,5 @@
 -----------------------------------------------
-pirt.splinegrid - representing data using grids
+pirt.splinegrid - Representing data using grids
 -----------------------------------------------
 
 .. automodule:: pirt.splinegrid

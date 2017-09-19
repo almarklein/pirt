@@ -35,7 +35,7 @@ from .deform import (Deformation, DeformationIdentity,
                      DeformationGridForward, DeformationFieldForward,
                      DeformationGridBackward, DeformationFieldBackward)
 
-from . import reg
+from .reg import *
 
 
 # Some utils need to be imported to use them

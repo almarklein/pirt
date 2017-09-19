@@ -1,5 +1,5 @@
 -------------------------------------
-pirt.interp - interpolation functions
+pirt.interp - Interpolation functions
 -------------------------------------
 
 .. automodule:: pirt.interp

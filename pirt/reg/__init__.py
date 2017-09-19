@@ -1,6 +1,6 @@
 # flake8: noqa
-
-""" Registration objects
+"""
+The reg module implements the various registration algorithms.
 """
 
 from .reg_base import AbstractRegistration, NullRegistration, BaseRegistration, GDGRegistration
