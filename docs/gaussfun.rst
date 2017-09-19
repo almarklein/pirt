@@ -17,3 +17,11 @@ pirt.gaussfun - Gaussian diffusion
 .. autofunction:: pirt.diffuse
 
 .. autofunction:: pirt.diffuse2
+
+----
+
+Technically implemented in `pyramid.py`, but very much related to Gaussian
+diffusion:
+
+.. autoclass:: pirt.ScaleSpacePyramid
+    :members:
