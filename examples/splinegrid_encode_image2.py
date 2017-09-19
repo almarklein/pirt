@@ -9,7 +9,7 @@ from pirt import SplineGrid
 
 
 # Read image
-im = vv.imread('lena.png').astype(np.float32)
+im = vv.imread('astronaut.png').astype(np.float32)
 
 # Show
 vv.figure(1); vv.clf()

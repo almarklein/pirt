@@ -10,7 +10,7 @@ from pirt import Pointset, SplineGrid
 
 
 # Read image
-im = vv.imread('lena.png').astype(np.float32)
+im = vv.imread('astronaut.png').astype(np.float32)
 im_r = im[:,:,0]
 
 # New sparse image and interpolated image

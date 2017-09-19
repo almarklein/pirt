@@ -21,6 +21,7 @@ def create_grid_image(shape, sampling=None, step=10, bigstep=None):
     Create an image depicting a grid. The first argument can also be an array.
     
     """ 
+    step = int(step + 0.4999999)
     
     # Accept arrays
     if isinstance(shape, np.ndarray):

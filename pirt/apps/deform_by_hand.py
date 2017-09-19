@@ -394,4 +394,4 @@ if __name__ == '__main__':
         a = d._a3
         t = a.wobjects[1]
         im = t._texture1._dataRef
-        vv.imwrite('c:/almar/projects/lena_eyes011.jpg', im[::1,::1]/255)
+        vv.imwrite('~/warped.jpg', im[::1,::1]/255)

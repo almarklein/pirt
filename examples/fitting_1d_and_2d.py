@@ -35,7 +35,7 @@ vv.plot(polypp, lc='r')
 
 
 # Input and result    
-im = vv.imread('lena.png')[::,::,2].copy()
+im = vv.imread('astronaut.png')[::,::,2].copy()
 Y,X = np.where(im==im.max())
 Y,X = Y[0], X[0]
 im[Y-1,X] -= 20 # make more interesting :)
