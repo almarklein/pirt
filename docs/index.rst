@@ -7,13 +7,14 @@ Welcome to Pirt's documentation!
 ================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
    
    interp
    deform
    splinegrid
    gaussfun
+   apps
 
 
 Indices and tables
