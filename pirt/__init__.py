@@ -25,6 +25,7 @@ from .interp import (get_cubic_spline_coefs, meshgrid,
                      warp, project, awarp, aproject,
                      deform_backward, deform_forward,
                      resize, imresize, zoom, imzoom,
+                     make_samples_absolute,
                      SliceInVolume)
 
 from pirt.splinegrid import SplineGrid, GridContainer, FieldDescription, FD

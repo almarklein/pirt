@@ -9,7 +9,8 @@ Welcome to Pirt's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
+   
+   interp
 
 
 Indices and tables

@@ -47,6 +47,11 @@ def deform_backward(data, deltas, order=1, spline_type=0.0):
 
 
 def deform_forward(data, deltas):
+    """deform_forward(data, deltas)
+    
+    Like deform_backward(), but applied to project (forward deformation).
+    
+    """
     
     # Check
     if len(deltas) != data.ndim:
