@@ -1,17 +1,14 @@
 # flake8: noqa
-""" Module pirt.deform
+""" 
+The deform module implements classes to represent deformations: The
+``DeformationGrid`` represents a deformation in world coordinates using
+a spline grid, and the ``DeformationField`` represents a deformation
+in world coordinates using an array for each dimension; it describes
+the deformation for each pixel/voxel.
 
-This moduls implements two classes to represent deformations:
-
-  * DeformationGrid: represents a deformation in world coordinates using
-    a spline grid.
-  * DeformationField: represents a deformation in world coordinates using
-    an array for each dimension; it describes the deformation for each
-    pixel/voxel.
-
-Note that these are actually base classes, one should use
-DeformationFieldBackward, DeformationFieldForward,
-DeformationGridBackward and DeformationGridForward.
+The aforementioned classes are actually base classes; one should use
+``DeformationFieldBackward``, ``DeformationFieldForward``,
+``DeformationGridBackward`` or ``DeformationGridForward``.
 
 """
 

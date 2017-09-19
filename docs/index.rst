@@ -11,6 +11,7 @@ Welcome to Pirt's documentation!
    :caption: Contents:
    
    interp
+   deform
 
 
 Indices and tables
