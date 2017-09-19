@@ -12,6 +12,7 @@ Welcome to Pirt's documentation!
    
    interp
    deform
+   splinegrid
 
 
 Indices and tables

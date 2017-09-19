@@ -28,12 +28,12 @@ from .interp import (get_cubic_spline_coefs, meshgrid,
                      make_samples_absolute,
                      SliceInVolume)
 
-from pirt.splinegrid import SplineGrid, GridContainer, FieldDescription, FD
+from .splinegrid import GridInterface, SplineGrid, GridContainer, FieldDescription, FD
 
-from pirt.deform import (Deformation, DeformationIdentity, 
-                         DeformationGrid, DeformationField,
-                         DeformationGridForward, DeformationFieldForward,
-                         DeformationGridBackward, DeformationFieldBackward)
+from .deform import (Deformation, DeformationIdentity, 
+                     DeformationGrid, DeformationField,
+                     DeformationGridForward, DeformationFieldForward,
+                     DeformationGridBackward, DeformationFieldBackward)
 
 from . import reg
 

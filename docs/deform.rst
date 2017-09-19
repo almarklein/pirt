@@ -1,6 +1,6 @@
---------------------------
-pirt.deform - deformations
---------------------------
+----------------------------------
+pirt.deform - deformations classes
+----------------------------------
 
 .. automodule:: pirt.deform
 

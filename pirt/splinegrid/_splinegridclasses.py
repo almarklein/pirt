@@ -11,11 +11,8 @@ class FieldDescription:
     """ FieldDescription(*args)
     
     Describes the dimensions of a field (i.e. Aarray). It stores
-    the following properties:
-      * shape
-      * sampling
-      * origin
-    
+    the following properties: shape, sampling, origin
+
     This class can for example be used to instantiate a new grid 
     without requiring the actual field.
     
