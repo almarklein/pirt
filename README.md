@@ -3,11 +3,22 @@ PIRT - Python Image Registration Toolkit.
 Introduction
 ------------
 
-Pirt provides functionality for image registration. It is the result
-of my PhD. There is functionality for a variety of image registration
-algorothms. Most notably pirt provides an easy way to use the Elastix
-toolkit. Further it implements some algorithms in Numba (Demons and
-Gravity).
+Pirt is the "Python image registration toolkit". It is a library for
+(elastic, i.e. non-regid) image registration of 2D and 3D images with
+support for groupwise registration. It has support to constrain the 
+deformations to be "diffeomorphic", i.e. without folding or shearing, and 
+thus invertable.
+
+Pirt is written in pure Python and uses Numba for speed. It depends on
+Numpy, Scipy and Numba. It has an optional dependency on Visvis for
+visualization.
+
+Pirt implements its own interpolation functions, which, incidentally,
+are faster than the corresponding functions in scipy and scikit-image
+(after Numba's JIT warmup).
+
+Overview
+--------
 
 Image registration itself requires several image processing techniques
 and data types, which are also included in this package:
@@ -19,8 +30,8 @@ and data types, which are also included in this package:
   * pirt.splinegrid - defines a B-spline grid class (for data up to
     three dimensions) and a class to describe a deformation grid
     (consisting of a B-spline grid for each dimension)
-  
-The registration algoriths are in `pirt.reg`.
+  * pirt.deform - defines classes to represent and compose deformations
+  * pirt.reg - the actual registration algorithms
 
 
 Dependencies and installation
@@ -31,24 +42,26 @@ Pirt dependencies:
   * numpy
   * scipy
   * numba
-  * visvis (for now)
+  * visvis (optional)
 
 To install:
 
   * `pip install pirt`
-  * `conda install pirt -c pyzo` (probably Windows only)
+  * or install from the hg repo
 
 
 Status and licensing
 --------------------
 
-Pirt should be considered alpha status. The API may change. There are no
-sphynx docs. There are little unit tests.
-
-Pirt is pretty much research code that I tried to make more or less
-user-friendly. It needs much more work to turn it into a proper package
-suitable for broad adoption. Unfortunately, I currently lack the
-resources to do that. If you have an interest in moving Pirt further,
-be my guest!
+Pirt should be considered alpha/beta status. The API may change. The
+core parts are pretty well tested though!
 
 Pirt is BSD licensed, see LICENSE.txt for more information.
+
+
+History
+-------
+
+Pirt was developed during my PhD. It more or less scratched my itch and
+was not well tested. It was written in Cython. In 2017 the code has been
+refactored to move to Numba, and many tests were added.

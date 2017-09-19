@@ -1,14 +1,29 @@
-.. Pirt documentation master file, created by
-   sphinx-quickstart on Tue Sep 19 23:03:06 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to Pirt's documentation!
 ================================
 
+Pirt is the "Python image registration toolkit". It is a library for
+(elastic, i.e. non-regid) image registration of 2D and 3D images with
+support for groupwise registration. It has support to constrain the 
+deformations to be "diffeomorphic", i.e. without folding or shearing, and 
+thus invertable.
+
+Pirt is written in pure Python and uses Numba for speed. It depends on
+Numpy, Scipy and Numba. It has an optional dependency on Visvis for
+visualization.
+
+Pirt implements its own interpolation functions, which, incidentally,
+are faster than the corresponding functions in scipy and scikit-image
+(after Numba's JIT warmup).
+
+The functionality inside Pirt is implemented over a series of submodules,
+but (almost) all functions and classes are available in the main namespace.
+
+The code lives on [Bitbucket](https://bitbucket.org/almarklein/pirt).
+Also check out the [examples](https://bitbucket.org/almarklein/pirt/src/tip/examples/).
+
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
+   :caption: Reference:
    
    gaussfun
    interp
