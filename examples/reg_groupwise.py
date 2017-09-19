@@ -1,3 +1,9 @@
+"""
+Example illustrating groupwise registration and interpolating between deformations
+to make smooth animations.
+
+Applicable to different registration algorithms.
+"""
 
 ## Init
 
@@ -43,7 +49,9 @@ fig = vv.figure(2); vv.clf()
 fig.position = 200,100, 900, 500
 
 # Apply registration
-reg = pirt.reg.ElastixGroupwiseRegistration(*ims)
+# reg = pirt.reg.ElastixGroupwiseRegistration(*ims)
+reg = pirt.reg.GravityRegistration(*ims)
+
 #
 if isinstance(reg, pirt.GravityRegistration):
     reg.params.mapping = 'backward'
@@ -220,3 +228,5 @@ fig.position = 200,200, 1000,500
 a=vv.subplot(121); a.axis.visible=False; vv.imshow(im_atlas_forward)
 a=vv.subplot(122); a.axis.visible=False; vv.imshow(im_atlas_backward)
 # vv.screenshot('c:/almar/projects/fourBlocks_maptoMean_.jpg', vv.gca(), sf=2, bg='w')
+
+vv.use().Run()
