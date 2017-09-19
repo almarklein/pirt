@@ -13,6 +13,7 @@ Welcome to Pirt's documentation!
    interp
    deform
    splinegrid
+   gaussfun
 
 
 Indices and tables

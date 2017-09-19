@@ -1,6 +1,6 @@
-""" Module gaussfun 
-
-Functions for diffusion and Gaussian derivatives for data of any dimension.
+"""
+The gaussfun module implements functions for diffusion and Gaussian
+derivatives for data of any dimension.
 
 Contents of this module:
 
