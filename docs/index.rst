@@ -20,6 +20,7 @@ but (almost) all functions and classes are available in the main namespace.
 
 The code lives on [Bitbucket](https://bitbucket.org/almarklein/pirt).
 Also check out the [examples](https://bitbucket.org/almarklein/pirt/src/tip/examples/).
+The [docs are on rtd](http://pirt.readthedocs.io/).
 
 .. toctree::
    :maxdepth: 1
