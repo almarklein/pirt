@@ -19,12 +19,7 @@ Contents of this module:
 import numpy as np
 import scipy.ndimage
 
-# Try to import pypoints
-try:
-    from visvis.utils import pypoints
-except ImportError:
-    pypoints = None
-
+from . import Aarray
 
 
 ## Kernels
@@ -348,8 +343,8 @@ def gfilter(L, sigma, order=0, mode='constant', warn=True):
     
     
     # Make Aarray if we can
-    if pypoints and pypoints.is_Aarray(Lo):
-        L = pypoints.Aarray(L, Lo.sampling, Lo.origin)
+    if hasattr(Lo, 'sampling') and hasattr(Lo, 'origin'):
+        L = Aarray(L, Lo.sampling, Lo.origin)
     
     # Done
     return L
@@ -417,8 +412,8 @@ def diffuse(L, sigma, mode='nearest'):
         L = scipy.ndimage.convolve1d(L, k, d, mode=mode)
     
     # Make Aarray if we can
-    if pypoints and pypoints.is_Aarray(Lo):
-        L = pypoints.Aarray(L, Lo.sampling, Lo.origin)
+    if hasattr(Lo, 'sampling') and hasattr(Lo, 'origin'):
+        L = Aarray(L, Lo.sampling, Lo.origin)
     
     # Done
     return L
@@ -438,7 +433,7 @@ def gfilter2(L, scale, order=0, mode='reflect', warn=True):
     """
     
     # Determine sigmas
-    if pypoints and pypoints.is_Aarray(L):
+    if hasattr(L, 'sampling'):
         sigmas = [float(scale)/s for s in L.sampling]
     else:
         sigmas = float(scale)
@@ -461,7 +456,7 @@ def diffuse2(L, scale, mode='nearest'):
     """
     
     # Determine sigmas
-    if pypoints and pypoints.is_Aarray(L):
+    if hasattr(L, 'sampling'):
         sigmas = [float(scale)/s for s in L.sampling]
     else:
         sigmas = float(scale)
