@@ -11,12 +11,10 @@ if sys.version_info < (3, 4):
 
 # Imports 
 
-from ._aarray import Aarray
-from .new_pointset import PointSet
-# todo: replace these with better versions ...
+from ._utils import Aarray, PointSet, Parameters
+
 from visvis import Aarray
 from visvis import Point, Pointset
-from visvis import ssdf
 
 from .gaussfun import (gaussiankernel, gfilter, gfilter2,
                        diffusionkernel, diffuse, diffuse2)

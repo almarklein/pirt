@@ -1,12 +1,11 @@
 """ Registration using the elastix registration toolkit.
 """
 
-from .. import ssdf 
-from .. import DeformationFieldBackward
-
+from .. import Parameters, DeformationFieldBackward
 from .reg_base import AbstractRegistration
 
 
+# Elastix is optional
 try:
     import pyelastix
 except ImportError:
@@ -61,11 +60,9 @@ class ElastixRegistration(AbstractRegistration):
     transformation_type = 'bspline'
     
     def __init__(self, *args):
-        
         # Elastix available?
         if pyelastix is None:
             raise RuntimeError(NEED_ELASTIX)
-        
         AbstractRegistration.__init__(self, *args, makeFloat=True)
         
         # Check
@@ -74,7 +71,7 @@ class ElastixRegistration(AbstractRegistration):
                 raise ValueError('Can only register two images. '
                                  'Use ElastixGroupwiseRegistration instead.')
         
-        self._params2 = ssdf.new() + pyelastix.get_advanced_params()    
+        self._params2 = Parameters(pyelastix.get_advanced_params().as_dict())
     
     
     def _defaultParams(self):
@@ -83,7 +80,7 @@ class ElastixRegistration(AbstractRegistration):
         params = AbstractRegistration._defaultParams(self)
         params.mapping = 'backward'
         
-        params += pyelastix.get_default_params(self.transformation_type)
+        params.update(pyelastix.get_default_params(self.transformation_type).as_dict())
         return params
     
     @property
@@ -99,7 +96,11 @@ class ElastixRegistration(AbstractRegistration):
         """
         
         # Compile params
-        params = self.params2 + self.params
+        params_elastix = pyelastix.Parameters()  # this is not a dict!
+        for key, val in self.params2.items():
+            setattr(params_elastix, key, val)
+        for key, val in self.params.items():
+            setattr(params_elastix, key, val)
         
         # Get images
         if isinstance(self, ElastixGroupwiseRegistration):
@@ -109,7 +110,7 @@ class ElastixRegistration(AbstractRegistration):
         
         # Use elastix
         # todo: what about keyword exactparams?
-        im, fields = pyelastix.register(im1, im2, params, verbose=verbose)
+        im, fields = pyelastix.register(im1, im2, params_elastix, verbose=verbose)
         
         # Field is a a tuple of arrays, or a list of tuple of arrays
         if not isinstance(self, ElastixGroupwiseRegistration):

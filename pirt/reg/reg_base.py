@@ -3,11 +3,13 @@ Defines the base registration object.
 """
 
 import time
+
 import numpy as np
-import pirt
-from pirt import ssdf, Aarray
-from pirt import (Deformation, DeformationGridForward, DeformationFieldForward,
-                  DeformationGridBackward, DeformationFieldBackward)
+
+from .. import Aarray, Parameters, ScaleSpacePyramid, SplineGrid
+from .. import (Deformation, DeformationField, DeformationIdentity,
+                DeformationGridForward, DeformationFieldForward,
+                DeformationGridBackward, DeformationFieldBackward)
 
 
 class classproperty(property):
@@ -444,7 +446,7 @@ class AbstractRegistration(object):
     def _defaultParams(self):
         """ Overload to create all default params.
         """
-        params = ssdf.new()
+        params = Parameters()
         params._class_name = self.__class__.__name__
         params.mapping = 'undefined'
         return params
@@ -462,7 +464,7 @@ class AbstractRegistration(object):
     
     @property
     def params(self):
-        """ Get params structure (as an ssdf struct). 
+        """ Get params structure (as a Parameters object). 
         """
         return self._params
     
@@ -471,14 +473,13 @@ class AbstractRegistration(object):
         """ set_params(params=None, **kwargs)
         
         Set any parameters. The parameters are updated with the given 
-        dict or ssdf.Struct of parameters, and then with the parameters given
+        dict, Parameters object, and then with the parameters given
         via the keyword arguments.
         
         Note that the parameter structure can also be accessed directly via
         the 'params' propery.
         
         """
-        
         # Combine user input
         D = {}
         if params:
@@ -986,7 +987,7 @@ class BaseRegistration(AbstractRegistration):
             raise ValueError('Invalid value for scale_levels.')
         
         # Create pyramids, using final_scale as an offset
-        self._pyramids = [pirt.ScaleSpacePyramid(im, final_scale)
+        self._pyramids = [ScaleSpacePyramid(im, final_scale)
                                 for im in self._ims]
         
         
@@ -1067,7 +1068,7 @@ class BaseRegistration(AbstractRegistration):
             raise ValueError('final_scale expressed in pixel units should be at least 0.5.')
         
         # Create pyramids, using final_scale as an offset
-        self._pyramids = [pirt.ScaleSpacePyramid(im, final_scale)
+        self._pyramids = [ScaleSpacePyramid(im, final_scale)
                                 for im in self._ims]
         
         # Calculate max scale
@@ -1276,7 +1277,7 @@ class GDGRegistration(BaseRegistration):
         """
         
         # Check
-        if not isinstance(deform, pirt.DeformationField):
+        if not isinstance(deform, DeformationField):
             raise ValueError('make_diffeomorphic needs a DeformationField.') 
         
         # Get grid sampling
@@ -1311,7 +1312,7 @@ class GDGRegistration(BaseRegistration):
             # Get grid sampling
             grid_sampling = self._get_grid_sampling(scale)
             # Create dummy grid
-            testGrid = pirt.SplineGrid(self._ims[0], grid_sampling)
+            testGrid = SplineGrid(self._ims[0], grid_sampling)
             # Check
             if all( [s<4 for s in testGrid.grid_shape] ):
                 print('skip because grid too small')
@@ -1344,7 +1345,7 @@ class GDGRegistration(BaseRegistration):
         # "nearest" images more.
         
         # Init deform
-        totalDeform = pirt.DeformationIdentity()
+        totalDeform = DeformationIdentity()
         nims = len(self._ims)
         count = 0
         

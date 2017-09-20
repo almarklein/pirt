@@ -8,7 +8,7 @@ deformations to be "diffeomorphic", i.e. without folding or shearing, and
 thus invertable.
 
 Pirt is written in pure Python and uses Numba for speed. It depends on
-Numpy, Scipy, Numba and pyelastix. It has an optional dependency on Visvis for
+Numpy, Scipy, Numba. It has an optional dependency on Visvis for
 visualization.
 
 Pirt implements its own interpolation functions, which, incidentally,

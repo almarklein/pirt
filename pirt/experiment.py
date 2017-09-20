@@ -14,7 +14,7 @@ import os
 import hashlib
 
 import numpy as np
-from pirt import ssdf
+from visvis import ssdf
 
 
 class Database:

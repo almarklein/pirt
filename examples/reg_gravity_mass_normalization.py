@@ -20,13 +20,8 @@ ims.append(imageio.imread('imageio:astronaut.png')[:,:,1].astype('float32'))
 # Add slice from stent image
 ims.append(imageio.volread('imageio:stent.npz')[:,90,:].astype('float32'))
 
+# Add a photo
 ims.append(imageio.imread('imageio:wikkie.png')[:,:,1].astype('float32'))
-
-# # Add sparse
-# s = ssdf.load(os.path.join(homeDir, 'projects/py/pirt/data/reg2D_simdata.ssdf'))
-# im1 = pirt.diffuse(s.im1,0.5)
-# im1 = im1 + np.random.normal(0.0, 0.1, im1.shape)
-# ims.append(im1)
 
 
 def normalize(mass):
