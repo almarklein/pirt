@@ -3,7 +3,7 @@ import visvis as vv
 
 from pirt import SplineGrid
 from pirt import interp
-from vv import Point, Pointset
+from visvis import Point, Pointset
 
 
 class SplineByHand:
@@ -162,7 +162,7 @@ class SplineByHand:
         tmp.shape = (tmp.size,1)
         pp = Pointset(tmp)
         grid1 = SplineGrid.from_points_multiscale((self._fieldSize,), grid_sampling,
-                        pp, self._pp[:,1])
+                        pp.data, self._pp[:,1])
         
         # Get copy
         grid2 = grid1.copy()

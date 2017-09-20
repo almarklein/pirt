@@ -52,6 +52,15 @@ class SliceInVolume:
     
     def __init__(self, pos, normal=None, previous=None):
         
+        if isinstance(pos, (tuple, list)):
+            pos = PointSet(pos)
+        elif isinstance(pos, np.ndarray):
+            pos = PointSet(pos)
+        elif hasattr(pos, '_is_Point'):  # visvis.Point
+            pos = PointSet(pos.data)
+        
+        assert pos.ndim == 2 and pos.shape == (1, 3)
+        
         # Init vectors
         self._pos = pos
         self._normal = None

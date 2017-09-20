@@ -5,7 +5,7 @@ import visvis as vv
 from pirt import FieldDescription
 from pirt import (DeformationGridForward, DeformationFieldForward,
                   DeformationGridBackward, DeformationFieldBackward)
-from vv import Point, Pointset
+from visvis import Point, Pointset
 
 
 class DeformByHand:
@@ -232,14 +232,14 @@ class DeformByHand:
             deform = self.DeformationField(FieldDescription(self._im))
         elif self._multiscale:
             deform = self.DeformationField.from_points_multiscale(self._im, grid_sampling, 
-                        self._pp1, self._pp2,
+                        self._pp1.data, self._pp2.data,
                         injective=self._injective, frozenedge=self._frozenedge)
         else:
             DeformationGrid = DeformationGridForward
             if not self._forward:
                 DeformationGrid = DeformationGridBackward
             grid = DeformationGrid.from_points(self._im, self._sampling, 
-                        self._pp1, self._pp2, 
+                        self._pp1.data, self._pp2.data, 
                         injective=self._injective, frozenedge=self._frozenedge)
             deform = grid.as_deformation_field()
         

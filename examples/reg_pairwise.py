@@ -28,9 +28,9 @@ fig = vv.figure(1); vv.clf()
 fig.position = 200,100, 900, 500
 
 # Init registration
-# reg = pirt.GravityRegistration(im1, im2)
+reg = pirt.GravityRegistration(im1, im2)
 # reg = pirt.DiffeomorphicDemonsRegistration(im1, im2)
-reg = pirt.ElastixRegistration(im1, im2)
+# reg = pirt.ElastixRegistration(im1, im2)
 
 if isinstance(reg, pirt.DiffeomorphicDemonsRegistration):
     reg.params.speed_factor = 2

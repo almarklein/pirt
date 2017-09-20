@@ -6,7 +6,7 @@ This example demonstrates quadratic fitting in 1D and 2D.
 import numpy as np
 import visvis as vv
 
-from pirt import Pointset, Aarray
+from pirt import PointSet, Aarray
 from pirt import fitting
 
 vv.figure(1)
@@ -20,7 +20,7 @@ pp = [2, 4, 3]
 t_max, polynom = fitting.fit_lq1(pp)
 
 # Sample polynom
-polypp = Pointset(2)
+polypp = PointSet(2)
 for i in np.linspace(-1,1,100):
     polypp.append(i, polynom[0]*i**2 + polynom[1]*i + polynom[2])
 

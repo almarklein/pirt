@@ -6,7 +6,7 @@ a B-spine grid.
 
 import numpy as np
 import visvis as vv
-from pirt import Pointset, SplineGrid
+from pirt import PointSet, SplineGrid
 
 
 # Read image
@@ -18,7 +18,7 @@ ims = np.zeros_like(im)
 imi = np.zeros_like(im)
 
 # Select points from the image
-pp = Pointset(2)
+pp = PointSet(2)
 R, G, B = [], [], []
 for i in range(10000):
     y = np.random.randint(0, im.shape[0])

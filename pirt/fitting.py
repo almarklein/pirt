@@ -38,7 +38,7 @@ def fit_lq1(pp):
     the point locations are assumed at t=(-1,0,1).
     
     """
-    if isinstance(pp, np.ndarray and pp.ndim == 2):
+    if isinstance(pp, np.ndarray) and pp.ndim == 2:
         # Arbitraty position of values. Apply general approach
         
         # Prepare A
