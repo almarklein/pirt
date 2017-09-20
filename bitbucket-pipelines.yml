@@ -12,18 +12,14 @@ pipelines:
         script:
           - python --version
           # Install runtime  and install dependencies
-          - pip install numpy scipy numba visvis
+          - pip install numpy scipy numba
           - pip install flit invoke flake8 pytest
           # Test style
           - invoke test --style
-          - exit 0  # arg, no opengl, so we cannot use visvis
-          # Enable fake display so that we can create windows
-          - Xvfb :99 -ac -screen 0 1280x720x16 -nolisten tcp &
-          - xvfb=$!
-          - export DISPLAY=:99.0
-          - sleep 3 # give xvfb some time to start
           # Install pirt
           - export FLIT_ROOT_INSTALL=1
           - flit install
           # Import
           - python -c 'import pirt; print(pirt)'
+          # Run tests
+          - invoke test --unit
