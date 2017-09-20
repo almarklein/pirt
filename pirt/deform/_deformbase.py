@@ -364,9 +364,10 @@ class Deformation(object):
         The interpolation value is used only if this is a deformation
         field.
         
-        The points pp should be a Pointset (x-y-z order).
+        The points pp should be a point set (x-y-z order).
         
         """
+        assert isinstance(pp, np.ndarray) and pp.ndim == 2
         if isinstance(self, DeformationGrid):
             return self[d].get_field_in_points(pp)
         elif isinstance(self, DeformationField):

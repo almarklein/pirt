@@ -53,6 +53,7 @@ def get_field_sparse(grid, pp):
     Also see get_field_at(). 
     
     """
+    assert isinstance(pp, np.ndarray) and pp.ndim == 2
     
     # Test dimensions
     if grid.ndim != pp.shape[1]:  # nocov
@@ -503,6 +504,7 @@ def set_field_sparse(grid, pp, values):
     are in world coordinates).  
     
     """
+    assert isinstance(pp, np.ndarray) and pp.ndim == 2
     
     # Test dimensions
     if grid.ndim != pp.shape[1]:  # nocov

@@ -13,8 +13,8 @@ import numpy as np
 im = np.zeros((512,512), 'float32')
 
 # Create pointsets
-pp1 = vv.Pointset(2)
-pp2 = vv.Pointset(2)
+pp1 = pirt.PointSet(2)
+pp2 = pirt.PointSet(2)
  
 if False:
     pp1.append(200,300)
@@ -52,7 +52,7 @@ else:
 
 # Deform
 def deform_and_show(injective):
-    from_points_multiscale = pirt.DeformationFieldForward
+    from_points_multiscale = pirt.DeformationFieldForward.from_points_multiscale
     deform = from_points_multiscale(im, 10, pp1, pp2, injective=injective, frozenedge=True)
     deform.show()
 

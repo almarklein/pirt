@@ -1,6 +1,6 @@
 import numpy as np
 
-from .. import Pointset, Aarray
+from .. import Aarray
 from .. import interp
 from ..splinegrid import GridInterface, FD
 from ..splinegrid import calculate_multiscale_sampling
@@ -312,9 +312,9 @@ class DeformationField(Deformation):
             The image (of any dimension) to which the deformation applies.
         sampling : scalar
             The sampling of the smallest grid to describe the deform.
-        pp1 : Pointset
+        pp1 : PointSet, 2D ndarray
             The base points.
-        pp2 : Pointset
+        pp2 : PointSet, 2D ndarray
             The target points.
         injective : bool or number
             Whether to prevent the grid from folding. An injective B-spline
@@ -339,6 +339,9 @@ class DeformationField(Deformation):
         specifically for deformations.
         
         """
+        assert isinstance(pp1, np.ndarray) and pp1.ndim == 2
+        assert isinstance(pp2, np.ndarray) and pp2.ndim == 2
+        
         # Obtain reference points and vectors
         if cls._forward_mapping:  # using the prop on cls would get the prop, not the value!
             pp = pp1
@@ -429,8 +432,8 @@ class DeformationField(Deformation):
                     error = residu[0]**2
                     for i in range(1,len(residu)):
                         error += residu[i]**2
-                elif isinstance(residu, Pointset):
-                    # print('Warning, vv.Pointset is used ...')
+                elif hasattr(residu, '_is_Pointset'):
+                    print('Warning, vv.Pointset is used ...')
                     error = residu[:,0]**2
                     for i in range(1, residu.ndim):
                         error += residu[:,i]**2

@@ -5,7 +5,7 @@ import visvis as vv
 from pirt import FieldDescription
 from pirt import (DeformationGridForward, DeformationFieldForward,
                   DeformationGridBackward, DeformationFieldBackward)
-from pirt import Point, Pointset
+from vv import Point, Pointset
 
 
 class DeformByHand:

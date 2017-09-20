@@ -54,14 +54,11 @@ field1 = grid1.get_field()
 field2 = grid2.get_field()
 
 # Get grid points
-ppg1 = pirt.Pointset(2)
-ppg2 = pirt.Pointset(2)
+ppg1 = pirt.PointSet(2)
+ppg2 = pirt.PointSet(2)
 for gx in range(grid1.grid_shape[0]):
-    p1 = pirt.Point( (gx-1)* grid1.grid_sampling, grid1.knots[gx] )
-    p2 = pirt.Point( (gx-1)* grid2.grid_sampling, grid2.knots[gx] )
-    ppg1.append(p1)
-    if 1:#p1 != p2:
-        ppg2.append(p2)
+    ppg1.append( (gx-1)* grid1.grid_sampling, grid1.knots[gx] )
+    ppg2.append( (gx-1)* grid2.grid_sampling, grid2.knots[gx] )
 
 
 # Draw

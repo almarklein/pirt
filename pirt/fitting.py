@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.linalg
-from pirt import Pointset
+
+from pirt import PointSet
 
 
 if True:
@@ -32,19 +33,19 @@ def fit_lq1(pp):
     Fit quadratic polynom to three points in 1D. If more than three 
     points are given, the result is the least squares solution.
     
-    points can be a 2D Pointset instance, resulting in a general
+    points can be a 2D ndarray object, resulting in a general
     solution. If only 3 values are given (as list of numpy array),
     the point locations are assumed at t=(-1,0,1).
     
     """
-    if isinstance(pp, Pointset):
+    if isinstance(pp, np.ndarray and pp.ndim == 2):
         # Arbitraty position of values. Apply general approach
         
         # Prepare A
-        A = pp.Pointset(3)
+        A = PointSet(3)
         for x in pp[:,0]:
-            A.Append(x**2, x, 1)
-        Ai = scipy.linalg.pinv(np.matrix(A.data))
+            A.append(x**2, x, 1)
+        Ai = scipy.linalg.pinv(np.matrix(A))
         # Prepare B
         B = np.matrix(pp[:,1])
         # Solve

@@ -2,8 +2,8 @@ import numpy as np
 import visvis as vv
 
 from pirt import SplineGrid
-from pirt import Point, Pointset
 from pirt import interp
+from vv import Point, Pointset
 
 
 class SplineByHand:

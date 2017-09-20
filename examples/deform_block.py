@@ -7,7 +7,7 @@ which are composed and inverted.
 import numpy as np
 import visvis as vv
 
-from pirt import Aarray, DeformationFieldBackward
+from pirt import Aarray, PointSet, DeformationFieldBackward
 
 # Parameters, play with these!
 INJECTIVE = True
@@ -25,11 +25,11 @@ im0[1::grid_step,:] = 0.3
 im0[:,1::grid_step] = 0.3
 
 # Define three locations, to move the block between
-pp = vv.Pointset(2)
+pp = PointSet(2)
 pp.append(45, 35)
 pp.append(45, 85)
 pp.append(85, 85)
-pp = pp * vv.Point(*reversed(im0.sampling))
+pp = pp * PointSet(reversed(im0.sampling))
 
 # Get down-deformation and right-deformation
 from_points_multiscale = DeformationFieldBackward.from_points_multiscale

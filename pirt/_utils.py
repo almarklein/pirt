@@ -238,7 +238,17 @@ class Aarray(np.ndarray):
         # Return
         return ob
     
-    
+    def __array_wrap__(self, out, context=None):
+        """ So that we return a native numpy array (or scalar) when a
+        reducting ufunc is applied (such as sum(), std(), etc.)
+        """
+        if not out.shape:
+            return out.dtype.type(out)  # Scalar
+        elif out.shape != self.shape:
+            return out.view(type=np.ndarray)
+        else:
+            return out  # Type Aarray
+
     def _correct_sampling(self, index):
         """ _correct_sampling(index)
         

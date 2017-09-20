@@ -4,7 +4,7 @@
 import numpy as np
 import numba
 
-from .. import Point, Aarray
+from .. import PointSet, Aarray
 from ._backward import warp
 
 
@@ -60,7 +60,7 @@ class SliceInVolume:
         
         # Calculate normal
         if normal is None and previous is None:
-            self._normal = Point(0,0,-1)
+            self._normal = PointSet((0,0,-1))
         elif normal is None:
             # Normal is defined by difference in position,
             # and the previous normal
@@ -73,10 +73,10 @@ class SliceInVolume:
         # Calculate vec1 and vec2
         if previous is None:
             # Use arbitrary vector
-            arbitrary = Point(1,0,0)
+            arbitrary = PointSet((1,0,0))
             self._vec1 = arbitrary.cross(self._normal)
             if self._vec1.norm() < 0.0001:
-                arbitrary = Point(0,1,0)
+                arbitrary = PointSet((0,1,0))
                 self._vec1 = arbitrary.cross(self._normal)
             # second
             self._vec2 = self._vec1.cross(self._normal)
@@ -122,8 +122,8 @@ def slice_from_volume(data, pos, vec1, vec2, Npatch, order=3):
         sampling, origin = data.sampling, data.origin
     
     # Generate sample positions
-    x = _slice_samples_from_volume(data, sampling, origin, (pos.x, pos.y, pos.z),
-                                   (vec1.x, vec1.y, vec1.z), (vec2.x, vec2.y, vec2.z),
+    x = _slice_samples_from_volume(data, sampling, origin, tuple(pos.flat),
+                                   tuple(vec1.flat), tuple(vec2.flat),
                                    Npatch)
     samplesx, samplesy, samplesz = x
                         

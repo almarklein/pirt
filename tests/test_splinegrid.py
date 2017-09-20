@@ -1,7 +1,7 @@
 import numpy as np
-import visvis as vv
+# import visvis as vv
 
-from pirt import Aarray, SplineGrid, FD, GridContainer
+from pirt import Aarray, PointSet, SplineGrid, FD, GridContainer
 from pirt.splinegrid import calculate_multiscale_sampling
 from pirt.testing import raises, run_tests_if_main
 
@@ -89,7 +89,7 @@ def test_spline_grid_1D():
     assert field3.min() < 7
     
     # From points
-    pp = vv.Pointset(1)
+    pp = PointSet(1)
     pp.append(4)
     pp.append(9)
     sg = SplineGrid.from_points(FD((14, )), 2, pp, [8, 7])
@@ -97,7 +97,7 @@ def test_spline_grid_1D():
     assert all(field5 == field2)
     
     # From points, multiscale
-    pp = vv.Pointset(1)
+    pp = PointSet(1)
     pp.append(4)
     pp.append(9)
     sg = SplineGrid.from_points_multiscale(FD((14, )), 2, pp, [8, 7])
@@ -197,7 +197,7 @@ def test_spline_grid_2D():
     assert field3.min() < 7
     
     # From points
-    pp = vv.Pointset(2)
+    pp = PointSet(2)
     pp.append(5, 4)
     pp.append(9, 8)
     sg2 = SplineGrid.from_points(FD((20, 20)), 2, pp, [8, 7])
@@ -205,7 +205,7 @@ def test_spline_grid_2D():
     assert np.all(field5 == field2)
     
     # From points, multiscale
-    pp = vv.Pointset(2)
+    pp = PointSet(2)
     pp.append(5, 4)
     pp.append(9, 8)
     sg = SplineGrid.from_points_multiscale(FD((20, 20)), 2, pp, [8, 7])
@@ -214,14 +214,14 @@ def test_spline_grid_2D():
     
     # Get field in points
     values = sg.get_field_in_points(pp)
-    assert list(values) == [field6[int(p[1]), int(p[0])] for p in pp]
+    assert list(values) == [field6[int(p[0,1]), int(p[0,0])] for p in pp]
     
     # Get field in points beyond field
-    pp = vv.Pointset(2)
+    pp = PointSet(2)
     pp.append(100, 103)
     pp.append(-100, -108)
     values = sg.get_field_in_points(pp)
-    assert list(values) == [field6[int(p[1]), int(p[0])] for p in pp]
+    assert list(values) == [field6[int(p[0,1]), int(p[0,0])] for p in pp]
     
     # Test copy
     sg2 = sg.copy()
@@ -312,7 +312,7 @@ def test_spline_grid_3D():
     assert field3.min() < 7
     
     # From points
-    pp = vv.Pointset(3)
+    pp = PointSet(3)
     pp.append(5, 5, 4)
     pp.append(9, 9, 8)
     sg2 = SplineGrid.from_points(FD((20, 20, 20)), 2, pp, [8, 7])
@@ -320,7 +320,7 @@ def test_spline_grid_3D():
     assert np.all(field5 == field2)
     
     # From points, multiscale
-    pp = vv.Pointset(3)
+    pp = PointSet(3)
     pp.append(5, 5, 4)
     pp.append(9, 9, 8)
     sg = SplineGrid.from_points_multiscale(FD((20, 20, 20)), 2, pp, [8, 7])
@@ -329,7 +329,7 @@ def test_spline_grid_3D():
     
     # Get field in points
     values = sg.get_field_in_points(pp)
-    assert list(values) == [field6[int(p[2]), int(p[1]), int(p[0])] for p in pp]
+    assert list(values) == [field6[int(p[0,2]), int(p[0,1]), int(p[0,0])] for p in pp]
     
     # Test copy
     sg2 = sg.copy()
@@ -410,19 +410,19 @@ def test_spline_grid_1D_anisotropic():
     assert field3.min() < 7
     
     # From points
-    pp = vv.Pointset(1)
+    pp = PointSet(1)
     pp.append(4)
     pp.append(9)
-    pp2 = pp * vv.Point(0.5)
+    pp2 = pp * PointSet((0.5, ))
     sg = SplineGrid.from_points(FD((14, ), (0.5, )), 2, pp2, [8, 7])
     field5 = sg.get_field()
     assert all(field5 == field2)
     
     # From points, multiscale
-    pp = vv.Pointset(1)
+    pp = PointSet(1)
     pp.append(4)
     pp.append(9)
-    pp2 = pp * vv.Point(0.5)
+    pp2 = pp * PointSet((0.5, ))
     sg = SplineGrid.from_points_multiscale(FD((14, ), (0.5, )), 2, pp2, [8, 7])
     field6 = sg.get_field()
     assert all(field6 == field3)
@@ -529,26 +529,26 @@ def test_spline_grid_2D_anisotropic():
     assert field3.min() < 7
     
     # From points
-    pp = vv.Pointset(2)
+    pp = PointSet(2)
     pp.append(5, 4)
     pp.append(9, 8)
-    pp2 = pp * vv.Point(2.0, 0.5)
+    pp2 = pp * PointSet((2.0, 0.5))
     sg2 = SplineGrid.from_points(FD((20, 20), (0.5, 2.0)), 2, pp2, [8, 7])
     field5 = sg2.get_field()
     assert np.all(field5 == field2)
     
     # From points, multiscale
-    pp = vv.Pointset(2)
+    pp = PointSet(2)
     pp.append(5, 4)
     pp.append(9, 8)
-    pp2 = pp * vv.Point(2.0, 0.5)
+    pp2 = pp * PointSet((2.0, 0.5))
     sg = SplineGrid.from_points_multiscale(FD((20, 20), (0.5, 2.0)), 2, pp2, [8, 7])
     field6 = sg.get_field()
     assert np.all(field6 == field3)
     
     # Get field in points
     values = sg.get_field_in_points(pp2)
-    assert list(values) == [field6[int(p[1]), int(p[0])] for p in pp]
+    assert list(values) == [field6[int(p[0,1]), int(p[0,0])] for p in pp]
     
     # Get field in samples, x-y-z order
     values2 = sg.get_field_in_samples((pp[:, 1], pp[:, 0] ))
@@ -648,26 +648,26 @@ def test_spline_grid_3D_anisotropic():
     assert field3.min() < 7
     
     # From points
-    pp = vv.Pointset(3)
+    pp = PointSet(3)
     pp.append(5, 5, 4)
     pp.append(9, 9, 8)
-    pp2 = pp * vv.Point(0.5, 3.0, 2.0)
+    pp2 = pp * PointSet((0.5, 3.0, 2.0))
     sg2 = SplineGrid.from_points(FD((20, 20, 20), (2.0, 3.0, 0.5)), 2, pp2, [8, 7])
     field5 = sg2.get_field()
     assert np.all(field5 == field2)
     
     # From points, multiscale
-    pp = vv.Pointset(3)
+    pp = PointSet(3)
     pp.append(5, 5, 4)
     pp.append(9, 9, 8)
-    pp2 = pp * vv.Point(0.5, 3.0, 2.0)
+    pp2 = pp * PointSet((0.5, 3.0, 2.0))
     sg = SplineGrid.from_points_multiscale(FD((20, 20, 20), (2.0, 3.0, 0.5)), 2, pp2, [8, 7])
     field6 = sg.get_field()
     assert np.all(field6 == field3)
     
     # Get field in points
     values = sg.get_field_in_points(pp2)
-    assert list(values) == [field6[int(p[2]), int(p[1]), int(p[0])] for p in pp]
+    assert list(values) == [field6[int(p[0, 2]), int(p[0,1]), int(p[0,0])] for p in pp]
     
     # Get field in samples, x-y-z order
     values2 = sg.get_field_in_samples((pp[:, 2], pp[:, 1], pp[:, 0] ))

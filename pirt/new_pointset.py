@@ -1,6 +1,5 @@
 import time
 import numpy as np
-import visvis as vv
 
 # Visvis contains a Pointset and Point class, which proofed useful, but had
 # downsides, mostly because they do not inherit from ndarray, but wrap it.
@@ -44,8 +43,9 @@ class PointSet(np.ndarray):
         if isinstance(input, int):
             # ndim is given, start empty pointset
             return np.ndarray.__new__(cls, (0,input), dtype=dtype)
-        elif isinstance(input, list):
+        elif isinstance(input, (tuple, list, reversed)):
             # Point is given, initialize with that point
+            input = list(input)
             if not all([isinstance(i, (float, int)) for i in input]):
                 raise ValueError('Lists given to PointSet must be all scalars.')
             a = np.array(input, dtype=dtype)
@@ -314,7 +314,7 @@ class PointSet(np.ndarray):
         """
         
         # the point directly given?
-        if len(p)==1:
+        if len(p)==1 and not isinstance(p[0], (float, int)):
             p = p[0]
         
         if isinstance(p, np.ndarray):
@@ -343,8 +343,7 @@ class PointSet(np.ndarray):
         #   return self.distance(Point(0,0,0))
         # but we don't have to perform checks now, which is faster...
         
-        data = self.data
-        dists = np.zeros( (data.shape[0],), np.float64)
+        dists = np.zeros( (self.shape[0],), np.float64)
         for i in range(self.shape[1]):
             dists += self[:,i].astype(np.float64)**2
         return np.sqrt(dists)
@@ -584,6 +583,7 @@ class PointSet(np.ndarray):
 
 
 if __name__ == '__main__':
+    import visvis as vv
     a = PointSet(2, np.float32)
     b = vv.Pointset(2)
     

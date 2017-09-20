@@ -2,9 +2,9 @@
 """
 
 import numpy as np
-import visvis as vv
+# import visvis as vv
 
-from pirt import (FD, DeformationGridForward, DeformationFieldForward,
+from pirt import (PointSet, FD, DeformationGridForward, DeformationFieldForward,
                   DeformationGridBackward, DeformationFieldBackward)
 
 import pirt
@@ -16,7 +16,7 @@ def cog(im):
     sampling = tuple(reversed(im.sampling))
     grids = pirt.meshgrid(im)
     total_weight = im.sum()
-    return vv.Point([sampling[i] * (grids[i] * im).sum() / total_weight for i in range(len(grids))])
+    return PointSet([sampling[i] * (grids[i] * im).sum() / total_weight for i in range(len(grids))])
 
 
 def get_data_small_deform():
@@ -43,12 +43,12 @@ def get_data_small_deform():
     weight2[35, 45+10] = 1
     
     # Create test deformation pointsets - 50 px down and 40 px right
-    pp1, pp2, pp3 = vv.Pointset(2), vv.Pointset(2), vv.Pointset(2)
+    pp1, pp2, pp3 = PointSet(2), PointSet(2), PointSet(2)
     pp1.append(45, 25) # begin pos
     pp2.append(45, 35) # intermediate
     pp3.append(55, 35) # end pos
     for pp in (pp1, pp2, pp3):
-        pp[:] *= vv.Point(*reversed(im0.sampling))
+        pp[:] *= PointSet(reversed(im0.sampling))
     
     return im0, c0, dfield1, weight1, dfield2, weight2, pp1, pp2, pp3
 
@@ -77,12 +77,12 @@ def get_data_big_deform():
     weight2[85, 45+40] = 1
     
     # Create test deformation pointsets - 50 px down and 40 px right
-    pp1, pp2, pp3 = vv.Pointset(2), vv.Pointset(2), vv.Pointset(2)
+    pp1, pp2, pp3 = PointSet(2), PointSet(2), PointSet(2)
     pp1.append(45, 35) # begin pos
     pp2.append(45, 85) # intermediate
     pp3.append(85, 85) # end pos
     for pp in (pp1, pp2, pp3):
-        pp[:] *= vv.Point(*reversed(im0.sampling))
+        pp[:] *= PointSet(reversed(im0.sampling))
     
     return im0, c0, dfield1, weight1, dfield2, weight2, pp1, pp2, pp3
 
@@ -123,7 +123,7 @@ def test_deformation_grid():
     im2 = d2.apply_deformation(im0)
     c2 = cog(im2)
     # Assert that we shifted down, if only by a bit
-    assert abs(c2.x - c0.x) < 1 and c2.y > c0.y + 1
+    assert abs(c2[0,0] - c0[0,0]) < 1 and c2[0,1] > c0[0,1] + 1
     
     # Deform from points, single-step
     
@@ -133,7 +133,7 @@ def test_deformation_grid():
     im3 = d3.apply_deformation(im0)
     c3 = cog(im3)
     assert np.all(im2 == im3)
-    assert c2 == c3
+    assert c2.distance(c3)[0] == 0
 
     # vv.figure(1); vv.clf(); vv.subplot(221); vv.imshow(im0); vv.subplot(222); vv.imshow(im2); vv.subplot(223); vv.imshow(im3);
     
@@ -173,7 +173,7 @@ def test_deformation_grid_multiscale():
     # Assert that the deform shifts down
     im4 = d4.apply_deformation(im0)
     c4 = cog(im4)
-    assert c4.distance(c0 + vv.Point(0, 50 * im0.sampling[0])) < 1
+    assert c4.distance(c0 + PointSet((0, 50 * im0.sampling[0]))) < 1
     
     # Shift right
     
@@ -188,12 +188,12 @@ def test_deformation_grid_multiscale():
     # Shift the original image to the right, works because whole image is shifted
     im6 = d6.apply_deformation(im0)
     c6 = cog(im6)
-    assert c6.distance(c0 + vv.Point(40 * im0.sampling[1], 0)) < 1
+    assert c6.distance(c0 + PointSet((40 * im0.sampling[1], 0))) < 1
     
     # Shift down-shifted image to right
     im6 = d6.apply_deformation(im4)
     c6 = cog(im6)
-    assert c6.distance(c0 + vv.Point(40 * im0.sampling[1], 50 * im0.sampling[0])) < 1
+    assert c6.distance(c0 + PointSet((40 * im0.sampling[1], 50 * im0.sampling[0]))) < 1
     
     # Combine deforms in wrong way, but result is still pretty good because deform is near-uniform
     d7 = d4 + d6
@@ -264,8 +264,8 @@ def test_deformation_field():
     im3 = d3.apply_deformation(im0)
     c2 = cog(im2)
     c3 = cog(im3)
-    assert c2.y > c0.y + 10 * im0.sampling[0]  # frozen edges hold us back
-    assert c3.y > c0.y + 10 * im0.sampling[0]  # frozen edges hold us back
+    assert c2[0, 1] > c0[0, 1] + 10 * im0.sampling[0]  # frozen edges hold us back
+    assert c3[0, 1] > c0[0, 1] + 10 * im0.sampling[0]  # frozen edges hold us back
     
     # Compose right deform in two ways
     im4 = d4.apply_deformation(im2)

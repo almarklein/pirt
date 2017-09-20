@@ -1,6 +1,6 @@
 import numpy as np
 
-from .. import Pointset, Aarray
+from .. import PointSet, Aarray
 from .. import interp
 from ..splinegrid import GridInterface, GridContainer, SplineGrid
 from ..splinegrid import calculate_multiscale_sampling
@@ -72,7 +72,7 @@ class DeformationGrid(Deformation, GridContainer):
         if showGrid:
             
             # Get points for all knots
-            pp = Pointset(2)
+            pp = PointSet(2)
             for gy in range(self.grid_shape[0]):
                 for gx in range(self.grid_shape[1]):
                     x = (gx-1) * self.grid_sampling
@@ -200,9 +200,9 @@ class DeformationGrid(Deformation, GridContainer):
             The image (of any dimension) to which the deformation applies.
         sampling : scalar
             The sampling of the returned grid.
-        pp1 : Pointset
+        pp1 : PointSet, 2D ndarray
             The base points.
-        pp2 : Pointset
+        pp2 : PointSet, 2D ndarray
             The target points.
         injective : bool
             Whether to prevent the grid from folding. This also penetalizes
@@ -215,6 +215,8 @@ class DeformationGrid(Deformation, GridContainer):
             to a point within the image boundaries.
         
         """
+        assert isinstance(pp1, np.ndarray) and pp1.ndim == 2
+        assert isinstance(pp2, np.ndarray) and pp2.ndim == 2
         
         # Obtain reference points and vectors
         if cls._forward_mapping:  # using the prop on cls would get the prop, not the value!
@@ -254,12 +256,14 @@ class DeformationGrid(Deformation, GridContainer):
             The image (of any dimension) to which the deformation applies.
         sampling : scalar
             The sampling of the returned grid.
-        pp1 : Pointset
+        pp1 : PointSet, 2D ndarray
             The base points.
-        pp2 : Pointset
+        pp2 : PointSet, 2D ndarray
             The target points.
         
         """
+        assert isinstance(pp1, np.ndarray) and pp1.ndim == 2
+        assert isinstance(pp2, np.ndarray) and pp2.ndim == 2
         
         # Obtain reference points and vectors
         if cls._forward_mapping:  # using the prop on cls would get the prop, not the value!
@@ -330,6 +334,7 @@ class DeformationGrid(Deformation, GridContainer):
         a grid that is injective (i.e. can be inverted).
         
         """
+        assert isinstance(pp, np.ndarray) and pp.ndim == 2
         
         # Apply using SplineGrid's method
         for d in range(self.ndim):

@@ -1,6 +1,6 @@
 import numpy as np
 
-from .. import Pointset, Aarray
+from .. import PointSet, Aarray
 from . import _splinegridfuncs
 
 
@@ -643,7 +643,7 @@ class SplineGrid(GridInterface):
         field = Aarray(self.get_field(), self.field_sampling)
         
         # Get points for all knots
-        pp = Pointset(2)
+        pp = PointSet(2)
         for gy in range(self.grid_shape[0]):
             for gx in range(self.grid_shape[0]):
                 x = (gx-1)* self.grid_sampling
@@ -685,12 +685,13 @@ class SplineGrid(GridInterface):
         Obtain the field in the specied points (in world coordinates).
         
         """
+        assert isinstance(pp, np.ndarray) and pp.ndim == 2
         
         # Throw away points that are not inside the field
         pp, tmp = self._select_points_inside_field(pp)
         
         # Sample field
-        return _splinegridfuncs.get_field_sparse(self, pp.data)
+        return _splinegridfuncs.get_field_sparse(self, pp)
     
     
     def get_field_in_samples(self, samples):
@@ -799,12 +800,13 @@ class SplineGrid(GridInterface):
             The image (of any dimension) to which the grid applies.
         sampling : scalar
             The sampling of the returned grid.
-        pp : Pointset
+        pp : PointSet, 2D ndarray
             The positions (in world coordinates) at which the values are given.
         values : list or numpy array
             The values specified at the given positions.
         
         """
+        assert isinstance(pp, np.ndarray) and pp.ndim == 2
         grid = SplineGrid(field, sampling)
         grid._set_using_points(pp, values)
         return grid
@@ -824,7 +826,7 @@ class SplineGrid(GridInterface):
             The image (of any dimension) to which the grid applies.
         sampling : scalar
             The sampling of the returned grid.
-        pp : Pointset
+        pp : PointSet, 2D ndarray
             The positions (in world coordinates) at which the values are given.
         values : list or numpy array
             The values specified at the given positions.
@@ -837,7 +839,8 @@ class SplineGrid(GridInterface):
         IEEE TRANSACTIONS ON VISUALIZATION AND COMPUTER GRAPHICS 3 (3): 228-244.
         
         """
-       
+        assert isinstance(pp, np.ndarray) and pp.ndim == 2
+        
         def setR(gridAdd, residu):
             gridAdd._set_using_points(pp, residu)
         
@@ -864,6 +867,7 @@ class SplineGrid(GridInterface):
         the outlier points in pp to the origin.
         
         """
+        assert isinstance(pp, np.ndarray) and pp.ndim == 2
         
         # Keep original for debugging
         ppo = pp  # noqa
@@ -882,7 +886,7 @@ class SplineGrid(GridInterface):
                     values = values[I]
                 else:
                     I, = np.where( (pp[:,d]<0) | (pp[:,d]>=field_shape_R[d]) )
-                    pp.data[I,:] = 0.0
+                    pp[I,:] = 0.0
         
         # Done
         return pp, values
@@ -909,6 +913,7 @@ class SplineGrid(GridInterface):
         Set the grid using sparse data, defined at the points in pp.
         
         """
+        assert isinstance(pp, np.ndarray) and pp.ndim == 2
         
         # Make sure values is an array if a list is given
         if not isinstance(values, np.ndarray):
@@ -918,7 +923,7 @@ class SplineGrid(GridInterface):
         pp, values = self._select_points_inside_field(pp, values)
         
         # Go
-        _splinegridfuncs.set_field_sparse(self, pp.data, values)
+        _splinegridfuncs.set_field_sparse(self, pp, values)
     
     
     def _refine(self, knots):

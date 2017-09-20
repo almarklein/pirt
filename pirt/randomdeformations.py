@@ -170,8 +170,8 @@ def create_random_deformation(im, amplitude=20, scale=50, n=50,
     fd = pirt.FD(im)
     
     # Init pointsets
-    pp1 = pirt.Pointset(fd.ndim)
-    pp2 = pirt.Pointset(fd.ndim)
+    pp1 = pirt.PointSet(fd.ndim)
+    pp2 = pirt.PointSet(fd.ndim)
     
     # Generate random points
     for iter in range(n):
