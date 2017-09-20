@@ -30,6 +30,7 @@ Also check out the [examples](https://bitbucket.org/almarklein/pirt/src/tip/exam
    deform
    splinegrid
    reg
+   aarrays_and_pointset
    apps
 
 

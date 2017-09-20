@@ -11,6 +11,8 @@ if sys.version_info < (3, 4):
 
 # Imports 
 
+from ._aarray import Aarray
+from .new_pointset import PointSet
 # todo: replace these with better versions ...
 from visvis import Aarray
 from visvis import Point, Pointset
