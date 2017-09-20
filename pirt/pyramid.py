@@ -2,7 +2,7 @@ import numpy as np
 import pirt
 
 from .gaussfun import diffuse2
-from visvis import Aarray
+from . import Aarray
 
 
 class BasePyramid:

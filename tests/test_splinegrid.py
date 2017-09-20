@@ -1,7 +1,7 @@
 import numpy as np
 import visvis as vv
 
-from pirt import SplineGrid, FD, GridContainer
+from pirt import Aarray, SplineGrid, FD, GridContainer
 from pirt.splinegrid import calculate_multiscale_sampling
 from pirt.testing import raises, run_tests_if_main
 
@@ -379,7 +379,7 @@ def test_spline_grid_1D_anisotropic():
     
     # From a field
     im = np.array([4, 4, 4, 4, 8, 4, 4, 4, 4, 7, 4, 4, 4, 4], np.float32)
-    im = vv.Aarray(im, (0.5, ))
+    im = Aarray(im, (0.5, ))
     sg = SplineGrid.from_field(im, 2)
     field1 = sg.get_field()
     assert field1.max() > 5.5
@@ -390,7 +390,7 @@ def test_spline_grid_1D_anisotropic():
     # From a weighted field
     im = np.array([4, 4, 4, 4, 8, 4, 4, 4, 4, 7, 4, 4, 4, 4], np.float32)
     ww = np.array([0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0], np.float32)
-    im = vv.Aarray(im, (0.5, ))
+    im = Aarray(im, (0.5, ))
     sg = SplineGrid.from_field(im, 2, ww)
     field2 = sg.get_field()
     assert field2.max() > 7.5
@@ -401,7 +401,7 @@ def test_spline_grid_1D_anisotropic():
     # From a weighted field, multiscale
     im = np.array([4, 4, 4, 4, 8, 4, 4, 4, 4, 7, 4, 4, 4, 4], np.float32)
     ww = np.array([0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0], np.float32)
-    im = vv.Aarray(im, (0.5, ))
+    im = Aarray(im, (0.5, ))
     sg = SplineGrid.from_field_multiscale(im, 2, ww)
     field3 = sg.get_field()
     assert field3.max() > 7.5
@@ -487,7 +487,7 @@ def test_spline_grid_2D_anisotropic():
     im = 4 * np.ones((20, 20), np.float32)
     im[4, 5] = 8
     im[8, 9] = 7
-    im = vv.Aarray(im, (0.5, 2.2))
+    im = Aarray(im, (0.5, 2.2))
     sg = SplineGrid.from_field(im, 2)
     field1 = sg.get_field()
     assert field1.ndim == 2
@@ -500,7 +500,7 @@ def test_spline_grid_2D_anisotropic():
     im = 4 * np.ones((20, 20), np.float32)
     im[4, 5] = 8
     im[8, 9] = 7
-    im = vv.Aarray(im, (0.5, 2.0))
+    im = Aarray(im, (0.5, 2.0))
     ww = np.zeros((20, 20), np.float32)
     ww[4, 5] = 1
     ww[8, 9] = 1
@@ -516,7 +516,7 @@ def test_spline_grid_2D_anisotropic():
     im = 4 * np.ones((20, 20), np.float32)
     im[4, 5] = 8
     im[8, 9] = 7
-    im = vv.Aarray(im, (0.5, 2.0))
+    im = Aarray(im, (0.5, 2.0))
     ww = np.zeros((20, 20), np.float32)
     ww[4, 5] = 1
     ww[8, 9] = 1
@@ -606,7 +606,7 @@ def test_spline_grid_3D_anisotropic():
     im = 4 * np.ones((20, 20, 20), np.float32)
     im[4, 5, 5] = 8
     im[8, 9, 9] = 7
-    im = vv.Aarray(im, (2.0, 3.0, 0.5))
+    im = Aarray(im, (2.0, 3.0, 0.5))
     sg = SplineGrid.from_field(im, 2)
     field1 = sg.get_field()
     assert field1.ndim == 3
@@ -622,7 +622,7 @@ def test_spline_grid_3D_anisotropic():
     ww = np.zeros((20, 20, 20), np.float32)
     ww[4, 5, 5] = 1
     ww[8, 9, 9] = 1
-    im = vv.Aarray(im, (2.0, 3.0, 0.5))
+    im = Aarray(im, (2.0, 3.0, 0.5))
     sg = SplineGrid.from_field(im, 2, ww)
     field2 = sg.get_field()
     assert field2.ndim == 3
@@ -638,7 +638,7 @@ def test_spline_grid_3D_anisotropic():
     ww = np.zeros((20, 20, 20), np.float32)
     ww[4, 5, 5] = 1
     ww[8, 9, 9] = 1
-    im = vv.Aarray(im, (2.0, 3.0, 0.5))
+    im = Aarray(im, (2.0, 3.0, 0.5))
     sg = SplineGrid.from_field_multiscale(im, 2, ww)
     field3 = sg.get_field()
     assert field3.ndim == 3

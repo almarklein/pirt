@@ -4,8 +4,7 @@
 import numpy as np
 import scipy.ndimage
 
-import pirt
-from pirt import Aarray
+from .. import Aarray, diffuse2
 from .reg_base import GDGRegistration, create_grid_image
 
 
@@ -232,7 +231,7 @@ class GravityRegistration(GDGRegistration):
         
         # Smooth to get the gravity field
         exta_smoothing = scale*1.0
-        grav_field = pirt.diffuse2(mass, exta_smoothing)
+        grav_field = diffuse2(mass, exta_smoothing)
         grav_field *= 1.0 / grav_field.mean()
         
         # Calculate gradient of mass fields.

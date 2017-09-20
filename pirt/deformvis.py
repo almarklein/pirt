@@ -185,8 +185,8 @@ class DeformableMixin(vv.MotionMixin):
         
         If this wobject is not a texture, the given deformations represent
         a deformation somewhere in 3D space. One should use the vv.Aarray
-        class to store the arrays. The exact location is then specified by
-        the origin and sampling properties.
+        or pirt.Aarray class to store the arrays. The exact location
+        is then specified by the origin and sampling properties.
         
         """
         

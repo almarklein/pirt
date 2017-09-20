@@ -8,7 +8,7 @@ import numpy as np
 
 
 try:  # pragma: no cover
-    from collections import OrderedDict as _dict
+    from collections import OrderedDict as _dict  # noqa
 except ImportError:
     _dict = dict
 
@@ -160,11 +160,10 @@ class Aarray(np.ndarray):
         if isinstance(shapeOrArray, np.ndarray):
             shape = shapeOrArray.shape
             ob = shapeOrArray.view(cls)
-            if is_Aarray(shapeOrArray):
-                if sampling is None:
-                    sampling = shapeOrArray.sampling
-                if origin is None:
-                    origin = shapeOrArray.origin
+            if sampling is None and hasattr(shapeOrArray, 'sampling'):
+                sampling = shapeOrArray.sampling
+            if origin is None and hasattr(shapeOrArray, 'origin'):
+                origin = shapeOrArray.origin
         else:
             shape = shapeOrArray
             ob = np.ndarray.__new__(cls, shape, dtype=dtype, **kwargs)
@@ -353,16 +352,15 @@ class Aarray(np.ndarray):
         and None is returned when non_on_index_error == True.
         
         """
+        point = tuple(point.flat)
         
         # check
-        if not is_Point(point):
-            raise ValueError("Given point must be an instance of Point.")
-        if point.ndim != len(self.shape):
+        if len(point) != len(self.shape):
             raise ValueError("Given point must match the number of dimensions.")
         
         # calculate indices
         ii = []
-        for i in range(point.ndim):
+        for i in range(len(point)):
             s = self.shape[i]
             p = ( point[-(i+1)] - self._origin[i] ) / self._sampling[i]
             p = int(p+0.5)
@@ -426,7 +424,7 @@ class Aarray(np.ndarray):
             pp.append(p)
         # return
         pp.reverse()
-        return Point(pp)
+        return PointSet(pp)
 
 
     def get_size(self):
@@ -439,7 +437,7 @@ class Aarray(np.ndarray):
         for i in range(len(self.shape)):
             pp.append( self._sampling[i] * self.shape[i] )
         pp.reverse()
-        return Point(pp)
+        return PointSet(pp)
     
     
     def get_start(self):
@@ -452,7 +450,7 @@ class Aarray(np.ndarray):
         """
         pp = [i for i in self.origin]
         pp.reverse()
-        return Point(pp)
+        return PointSet(pp)
     
     
     def get_end(self):
@@ -465,4 +463,4 @@ class Aarray(np.ndarray):
         for i in range(len(self.shape)):
             pp.append( self._origin[i] + self._sampling[i] * self.shape[i] )
         pp.reverse()
-        return Point(pp)
+        return PointSet(pp)

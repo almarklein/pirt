@@ -4,8 +4,7 @@
 import numpy as np
 import scipy.ndimage
 
-import pirt
-from pirt import Aarray
+from .. import Aarray, diffuse2
 from .reg_base import GDGRegistration, BaseRegistration, create_grid_image
 
 
@@ -217,7 +216,7 @@ class BaseDemonsRegistration(object):
                 final_smoothing = float(self.params.final_smoothing)
                 sigma_reg = scale * final_smoothing / final_scale
                 # Diffuse
-                dd_[d] = pirt.diffuse2(dd_[d], sigma_reg)
+                dd_[d] = diffuse2(dd_[d], sigma_reg)
                 dd_[d] = dd_[d].astype('float32')
             self.timer.stop('regularizing')
             

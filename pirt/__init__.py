@@ -13,7 +13,6 @@ if sys.version_info < (3, 4):
 
 from ._utils import Aarray, PointSet, Parameters
 
-from visvis import Aarray
 from visvis import Point, Pointset
 
 from .gaussfun import (gaussiankernel, gfilter, gfilter2,

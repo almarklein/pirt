@@ -199,7 +199,7 @@ class GridInterface:
         if isinstance(field, FieldDescription):
             self._field_shape = field.shape
             self._field_sampling = field.sampling
-        elif isinstance(field, Aarray):
+        elif hasattr(field, 'sampling'):
             self._field_shape = field.shape
             self._field_sampling = field.sampling
         elif isinstance(field, np.ndarray):

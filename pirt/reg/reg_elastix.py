@@ -11,7 +11,8 @@ try:
 except ImportError:
     pyelastix = None
 
-NEED_ELASTIX = 'The Elastix registration algorithm needs the pyelastix library (install with conda or pip).'
+NEED_ELASTIX = ('The Elastix registration algorithm needs the pyelastix library '
+                '(install with conda or pip).')
 
 
 class ElastixRegistration(AbstractRegistration):

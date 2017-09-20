@@ -59,7 +59,7 @@ class DeformationField(Deformation):
             # Make Aarray if they are not
             fields2 = []
             for field in fields:
-                if not isinstance(field, Aarray):
+                if not hasattr(field, 'sampling'):
                     field = Aarray(field)
                 fields2.append(field)
             

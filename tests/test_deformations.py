@@ -27,7 +27,7 @@ def get_data_small_deform():
     
     # Create test image
     im0 = np.zeros((100, 100), np.float32)
-    im0 = vv.Aarray(im0, (0.5, 3.0))
+    im0 = pirt.Aarray(im0, (0.5, 3.0))
     im0[20:30, 40:50] = 1.0
     c0 = cog(im0)
     
@@ -61,7 +61,7 @@ def get_data_big_deform():
     
     # Create test image
     im0 = np.zeros((100, 100), np.float32)
-    im0 = vv.Aarray(im0, (0.25, 2.0))
+    im0 = pirt.Aarray(im0, (0.25, 2.0))
     im0[30:40, 40:50] = 1.0
     c0 = cog(im0)
     

@@ -7,7 +7,7 @@ which are composed and inverted.
 import numpy as np
 import visvis as vv
 
-from pirt import DeformationFieldBackward
+from pirt import Aarray, DeformationFieldBackward
 
 # Parameters, play with these!
 INJECTIVE = True
@@ -16,7 +16,7 @@ FREEZE_EDGES = True
 
 # Create test image with one block in the corner
 im0 = np.zeros((100, 100), np.float32)
-im0 = vv.Aarray(im0, (0.66, 1.0))
+im0 = Aarray(im0, (0.66, 1.0))
 im0[30:40, 40:50] = 1.0
 
 # Draw a grid on it
