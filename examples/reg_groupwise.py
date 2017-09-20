@@ -49,8 +49,8 @@ fig = vv.figure(2); vv.clf()
 fig.position = 200,100, 900, 500
 
 # Apply registration
-# reg = pirt.reg.ElastixGroupwiseRegistration(*ims)
-reg = pirt.reg.GravityRegistration(*ims)
+# reg = pirt.ElastixGroupwiseRegistration(*ims)
+reg = pirt.GravityRegistration(*ims)
 
 #
 if isinstance(reg, pirt.GravityRegistration):

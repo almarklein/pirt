@@ -1,10 +1,18 @@
 """ Registration using the elastix registration toolkit.
 """
 
+from .. import ssdf 
+from .. import DeformationFieldBackward
+
 from .reg_base import AbstractRegistration
-from pirt import ssdf 
-from pirt import DeformationFieldBackward
-from .pyelastix import Elastix
+
+
+try:
+    import pyelastix
+except ImportError:
+    pyelastix = None
+
+NEED_ELASTIX = 'The Elastix registration algorithm needs the pyelastix library (install with conda or pip).'
 
 
 class ElastixRegistration(AbstractRegistration):
@@ -53,6 +61,11 @@ class ElastixRegistration(AbstractRegistration):
     transformation_type = 'bspline'
     
     def __init__(self, *args):
+        
+        # Elastix available?
+        if pyelastix is None:
+            raise RuntimeError(NEED_ELASTIX)
+        
         AbstractRegistration.__init__(self, *args, makeFloat=True)
         
         # Check
@@ -61,8 +74,7 @@ class ElastixRegistration(AbstractRegistration):
                 raise ValueError('Can only register two images. '
                                  'Use ElastixGroupwiseRegistration instead.')
         
-        reg = Elastix()
-        self._params2 = ssdf.new() + reg.get_advanced_params()    
+        self._params2 = ssdf.new() + pyelastix.get_advanced_params()    
     
     
     def _defaultParams(self):
@@ -71,8 +83,7 @@ class ElastixRegistration(AbstractRegistration):
         params = AbstractRegistration._defaultParams(self)
         params.mapping = 'backward'
         
-        reg = Elastix()
-        params += reg.get_default_params(self.transformation_type)
+        params += pyelastix.get_default_params(self.transformation_type)
         return params
     
     @property
@@ -97,16 +108,18 @@ class ElastixRegistration(AbstractRegistration):
             im1, im2 = self._ims[0], self._ims[1]
         
         # Use elastix
-        reg = Elastix()
-        im, fields = reg.register(im1, im2, params, verbose=verbose)
+        # todo: what about keyword exactparams?
+        im, fields = pyelastix.register(im1, im2, params, verbose=verbose)
         
+        # Field is a a tuple of arrays, or a list of tuple of arrays
+        if not isinstance(self, ElastixGroupwiseRegistration):
+            fields = [fields]
         
+        # For each deformation in the potentially groupwise registration process ...
         for i in range(len(fields)):
             field = fields[i]
-            
             # Reverse (Elastix uses x-y-z order)
             field = [f for f in reversed(field)]
-            
             # Set resulting deforms
             self._deforms[i] = DeformationFieldBackward(*field)
         
