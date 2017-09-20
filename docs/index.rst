@@ -18,9 +18,9 @@ are faster than the corresponding functions in scipy and scikit-image
 The functionality inside Pirt is implemented over a series of submodules,
 but (almost) all functions and classes are available in the main namespace.
 
-The code lives on [Bitbucket](https://bitbucket.org/almarklein/pirt).
-Also check out the [examples](https://bitbucket.org/almarklein/pirt/src/tip/examples/).
-The [docs are on rtd](http://pirt.readthedocs.io/).
+The code lives on `Bitbucket <https://bitbucket.org/almarklein/pirt>`_.
+Also check out the `examples <https://bitbucket.org/almarklein/pirt/src/tip/examples/>`_
+or the `docs <http://pirt.readthedocs.io>`_.
 
 .. toctree::
    :maxdepth: 1
