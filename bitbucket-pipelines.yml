@@ -13,7 +13,7 @@ pipelines:
           - python --version
           # Install runtime  and install dependencies
           - pip install numpy scipy numba
-          - pip install flit invoke flake8 pytest
+          - pip install flit invoke flake8 pytest pytest-cover
           # Test style
           - invoke test --style
           # Install pirt
