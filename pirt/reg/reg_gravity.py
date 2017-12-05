@@ -1,6 +1,7 @@
 """ Registration using gravity registration.
 """
 
+import numba
 import numpy as np
 import scipy.ndimage
 
@@ -8,7 +9,38 @@ from .. import Aarray, diffuse2
 from .reg_base import GDGRegistration, create_grid_image
 
 
-    
+@numba.jit(nopython=True, nogil=True)
+def near_root3(arr):
+    """ near_root3(n)
+    Calculates an approximation of the square root using
+    (a few) Newton iterations.
+    """
+    for z in range(arr.shape[0]):
+        for y in range(arr.shape[1]):
+            for x in range(arr.shape[2]):
+                n = arr[z, y, x]
+                v = 1.0    
+                v = v - (v * v - n) / (2.0 * v)
+                v = v - (v * v - n) / (2.0 * v)
+                v = v - (v * v - n) / (2.0 * v)
+                arr[z, y, x] = v
+
+
+@numba.jit(nopython=True, nogil=True)
+def near_exp3(arr):
+    """ near_exp3(n)
+    Calculates an approximation of the exp.
+    """
+    for z in range(arr.shape[0]):
+        for y in range(arr.shape[1]):
+            for x in range(arr.shape[2]):
+                v = arr[z, y, x]
+                v = 1.0 + v / 256.0;
+                v *= v; v *= v; v *= v; v *= v
+                v *= v; v *= v; v *= v; v *= v
+                arr[z, y, x] = v
+
+
 class GravityRegistration(GDGRegistration):
     """ GravityRegistration(*images)
     
@@ -153,6 +185,8 @@ class GravityRegistration(GDGRegistration):
             
             # Sum and take square root
             mass = np.add(*massParts)**0.5
+            # mass = np.add(*massParts)
+            # near_root3(mass)  # mmm, does not seem to matter much
         
         elif order==2:
             # Laplacian
@@ -246,6 +280,17 @@ class GravityRegistration(GDGRegistration):
     
     
     def _soft_limit1(self, data, limit):
+        
+        # Does not seem to be a bottleneck
+        # if limit == 1:
+        #     data = -data
+        #     near_exp3(data)
+        #     data[:] = 1.0 - data
+        # else:
+        #     data = -data/limit
+        #     near_exp3(data)
+        #     data[:] = -limit * (data-1)
+        
         if limit == 1:
             data[:] = 1.0 - np.exp(-data)
         else:
