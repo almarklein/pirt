@@ -18,13 +18,13 @@ NEED_ELASTIX = ('The Elastix registration algorithm needs the pyelastix library 
 class ElastixRegistration(AbstractRegistration):
     """ ElastixRegistration(im1, im2)
     
+    Inherits from :class:`pirt.AbstractRegistration`.
+
     Registration class for registration using the Elastix toolkit.
     [http://elastix.isi.uu.nl/]
     
-    Introduction
-    ------------
     This class performs a bspline transformation by default. See also
-    the convenience classes ElastixRegistration_*.
+    the convenience subclasses.
     
     The params property this class returns a struct with a few common
     Elastix parameters. the params2 property contains another set of
@@ -35,14 +35,11 @@ class ElastixRegistration(AbstractRegistration):
     
     Because the parameters directly represent the parameters for the
     Elastix toolkit, their names do not follow the style of most
-    other registration objects in this package.
+    other registration objects in this package. Here we lists some of the
+    common parameters, for more details we refer to the elastix manual.
     
-    
-    Registration parameters 
-    -----------------------
-    This lists some of the default parameters, for more details
-    we refer to the elastix manual.
-    
+    Parameters 
+    ----------
     FinalGridSpacingInPhysicalUnits : int
         When using the BSplineTransform, the final spacing of the grid.
         This controls the smoothness of the final deformation.
@@ -89,12 +86,7 @@ class ElastixRegistration(AbstractRegistration):
         return self._params2
     
     
-    def register(self, verbose=1, fig=None):
-        """ register()
-        
-        Perform the registration. 
-        
-        """
+    def _register(self, verbose=1, fig=None):
         
         # Compile params
         params_elastix = pyelastix.Parameters()  # this is not a dict!
@@ -154,14 +146,10 @@ class ElastixRegistration_affine(ElastixRegistration):
     [http://elastix.isi.uu.nl/]
     
     This class performs an affine transformation by default. See
-    the ElastixRegistration class for more details.
+    :class:`pirt.ElastixRegistration` for more details.
     
-    
-    Registration parameters 
-    -----------------------
-    This lists some of the default parameters, for more details
-    we refer to the elastix manual.
-    
+    Parameters 
+    ----------
     AutomaticScalesEstimation : bool
         When using a rigid or affine transform. Scales the affine matrix
         elements compared to the translations, to make sure they are in
@@ -190,18 +178,14 @@ class ElastixRegistration_affine(ElastixRegistration):
 class ElastixRegistration_rigid(ElastixRegistration):
     """ 
     
-   Registration class for registration using the Elastix toolkit.
+    Registration class for registration using the Elastix toolkit.
     [http://elastix.isi.uu.nl/]
     
     This class performs a rigid transformation by default. See
-    the ElastixRegistration class for more details.
+    :class:`pirt.ElastixRegistration` for more details.
     
-    
-    Registration parameters 
-    -----------------------
-    This lists some of the default parameters, for more details
-    we refer to the elastix manual.
-    
+    Parameters 
+    ----------
     AutomaticScalesEstimation : bool
         When using a rigid or affine transform. Scales the affine matrix
         elements compared to the translations, to make sure they are in
@@ -229,15 +213,14 @@ class ElastixRegistration_rigid(ElastixRegistration):
 class ElastixGroupwiseRegistration(ElastixRegistration):
     """ ElastixGroupwiseRegistration(*images)
     
+    Inherits from :class:`pirt.ElastixRegistration`.
+    
     Registration class for registration using the Elastix toolkit.
     [http://elastix.isi.uu.nl/]
     
     This variant uses the groupwise registration approach as proposed
     by Metz et al. "Nonrigid registration of dynamic medical imaging data
     using nD+t B-splines and a groupwise optimization approach"
-    
-    Introduction
-    ------------
     
     The params property this class returns a struct with a few common
     Elastix parameters. the params2 property contains another set of
@@ -250,12 +233,8 @@ class ElastixGroupwiseRegistration(ElastixRegistration):
     Elastix toolkit, their names do not follow the style of most
     other registration objects in this package.
     
-    
-    Registration parameters 
-    -----------------------
-    This lists some of the default parameters, for more details
-    we refer to the elastix manual.
-    
+    Parameters 
+    ----------
     FinalGridSpacingInPhysicalUnits : int
         When using the BSplineTransform, the final spacing of the grid.
         This controls the smoothness of the final deformation.

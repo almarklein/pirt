@@ -12,15 +12,19 @@ from .reg_base import GDGRegistration, create_grid_image
 class GravityRegistration(GDGRegistration):
     """ GravityRegistration(*images)
     
+    Inherits from :class:`pirt.GDGRegistration`
+    
     A registration algorithm based on attraction between masses in both 
     images, which is robust for large differences between the images.
     
     The most important parameters to tune the algorithm with are 
     scale_sampling, speed_factor and final_grid_sampling.
     
+    The ``speed_factor`` and ``mass_transforms`` parameters are specific to
+    this algorithm. Other important parameters are also listed below.
     
-    Parameters specific to this algorithm
-    -------------------------------------
+    Parameters
+    ----------
     speed_factor : scalar
         The relative force of the transform. This one of the most important
         parameters to tune. Typical values are between 1 and 5. Default 1.
@@ -30,9 +34,6 @@ class GravityRegistration(GDGRegistration):
         and Laplacian respectively. 0 only performs normalization to subtract
         the background. Can be specified for all images or for each image
         individually. Default 1.
-    
-    Other important parameters
-    --------------------------
     mapping : {'forward', 'backward'}
         Whether forward or backward mapping is used. Default forward.
     final_scale : scalar
@@ -209,7 +210,7 @@ class GravityRegistration(GDGRegistration):
         scale = iterInfo[2]
         
         # Use buffered?
-        buffered = self.get_buffered_data(image_id, iterInfo)
+        buffered = self._get_buffered_data(image_id, iterInfo)
         if buffered is not None:
             mass = buffered
         
@@ -226,7 +227,7 @@ class GravityRegistration(GDGRegistration):
             # Buffer this mass image
             # We could also buffer the gradient, but that costs an
             # awefull lot of memory (for 3D images).
-            self.set_buffered_data(image_id, iterInfo, mass)
+            self._set_buffered_data(image_id, iterInfo, mass)
         
         
         # Smooth to get the gravity field
@@ -348,8 +349,8 @@ class GravityRegistration(GDGRegistration):
         self.visualizer.fig.DrawNow()
     
     
-    def deform_from_image_pair(self, i, j, iterInfo):
-        """ deform_from_image_pair(i, j, iterInfo)
+    def _deform_from_image_pair(self, i, j, iterInfo):
+        """ _deform_from_image_pair(i, j, iterInfo)
         
         Calculate the deform for image i to image j.
         
@@ -360,10 +361,10 @@ class GravityRegistration(GDGRegistration):
         
         # Try using buffered data
         # we can make good use of the fact that our delta deforms are symetric
-        buffered = self.get_buffered_data((i,j), iterInfo)
+        buffered = self._get_buffered_data((i,j), iterInfo)
         if buffered is not None:
             return buffered
-        buffered = self.get_buffered_data((j,i), iterInfo)
+        buffered = self._get_buffered_data((j,i), iterInfo)
         if buffered is not None:
             for grid in buffered:
                 grid._knots = - grid._knots
@@ -394,7 +395,7 @@ class GravityRegistration(GDGRegistration):
         
         # Regularize using a B-spline grid
         deformForce = self.DeformationField(*dd_)
-        deform = self.regularize_diffeomorphic(scale, deformForce, mass1*mass2)
+        deform = self._regularize_diffeomorphic(scale, deformForce, mass1*mass2)
         
         # Show
         if i==0 and j==1:
@@ -403,5 +404,5 @@ class GravityRegistration(GDGRegistration):
             self._visualize(mass1, mass2, self._get_grid_sampling(scale))
         
         # Buffer B-spline grid and return
-        self.set_buffered_data((i,j), iterInfo, deform)
+        self._set_buffered_data((i,j), iterInfo, deform)
         return deform

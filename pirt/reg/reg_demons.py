@@ -58,7 +58,7 @@ class BaseDemonsRegistration(object):
         scale = iterInfo[2]
         
         # Use buffered?
-        buffered = self.get_buffered_data(image_id, iterInfo)
+        buffered = self._get_buffered_data(image_id, iterInfo)
         if buffered is not None:
             im = buffered
         
@@ -67,7 +67,7 @@ class BaseDemonsRegistration(object):
             im = self.get_deformed_image(image_id, scale)
             
             # Buffer
-            self.set_buffered_data(image_id, iterInfo, im)
+            self._set_buffered_data(image_id, iterInfo, im)
         
         
         # Calculate gradient of image.
@@ -136,8 +136,8 @@ class BaseDemonsRegistration(object):
         self.visualizer.fig.DrawNow()
     
     
-    def deform_from_image_pair(self, i, j, iterInfo):
-        """ deform_from_image_pair(i, j, iterInfo)
+    def _deform_from_image_pair(self, i, j, iterInfo):
+        """ _deform_from_image_pair(i, j, iterInfo)
         
         Calculate the deform for image i to image j.
         
@@ -148,10 +148,10 @@ class BaseDemonsRegistration(object):
         
         # Try using buffered data
         # we can make good use of the fact that our delta deforms are symetric
-        buffered = self.get_buffered_data((i,j), iterInfo)
+        buffered = self._get_buffered_data((i,j), iterInfo)
         if buffered is not None:
             return buffered
-        buffered = self.get_buffered_data((j,i), iterInfo)
+        buffered = self._get_buffered_data((j,i), iterInfo)
         if buffered is not None:
             for grid in buffered:
                 grid._knots = - grid._knots
@@ -204,7 +204,7 @@ class BaseDemonsRegistration(object):
             
             # Regularize using a B-spline grid
             deformForce = self.DeformationField(*dd_)
-            deform = self.regularize_diffeomorphic(scale, deformForce)
+            deform = self._regularize_diffeomorphic(scale, deformForce)
         
         else:
             
@@ -233,7 +233,7 @@ class BaseDemonsRegistration(object):
             self._visualize(gridSize)
         
         # Buffer B-spline grid and return
-        self.set_buffered_data((i,j), iterInfo, deform)
+        self._set_buffered_data((i,j), iterInfo, deform)
         return deform
 
 
@@ -241,24 +241,25 @@ class BaseDemonsRegistration(object):
 class OriginalDemonsRegistration(BaseRegistration, BaseDemonsRegistration):
     """ OriginalDemonsRegistration(*images)
     
+    Inherits from :class:`pirt.BaseRegistration`.
+    
     The original version of the Demons algorithm. Uses Gaussian diffusion
     to regularize the deformation field. This is the implementation as 
     proposed by He Wang et al. in 2005 "Validation of an accelerated 'demons' 
     algorithm for deformable image registration in radiation therapy"
     
-    See also DiffeomorphicDemonsRegistration.
+    See also :class:`pirt.DiffeomorphicDemonsRegistration`.
     
+    The ``speed_factor`` and ``noise_factor`` parameters are specific to this
+    algorithm. Other important parameters are also listed below.
     
-    Parameters specific to this algorithm
-    -------------------------------------
+    Parameters
+    ----------
     speed_factor : scalar
         The relative force of the transform. This one of the most important
         parameters to tune. Default 3.0.
     noise_factor : scalar
         The noise factor. Default 2.5.
-    
-    Other important parameters
-    --------------------------
     final_scale : scalar
         The minimum scale used during the registration process. This is the
         scale at which the registration ends. Default 1.0. Because calculating
@@ -300,7 +301,7 @@ class OriginalDemonsRegistration(BaseRegistration, BaseDemonsRegistration):
         
         return params
     
-    def deform_for_image(self, i, iterInfo):
+    def _deform_for_image(self, i, iterInfo):
         # implement pairwise registration
         
         # Get wise
@@ -311,17 +312,17 @@ class OriginalDemonsRegistration(BaseRegistration, BaseDemonsRegistration):
         # Decide which routine to use
         if deform_wise in ['pairwise', 'pairwise1']:
             if i==0:
-                return self.deform_from_image_pair(0, 1, iterInfo)
+                return self._deform_from_image_pair(0, 1, iterInfo)
         elif deform_wise == 'pairwise2':
             if i==1:
-                return self.deform_from_image_pair(1, 0, iterInfo)
+                return self._deform_from_image_pair(1, 0, iterInfo)
         elif deform_wise == 'groupwise':
-            self.set_buffered_data((0,1), iterInfo, None)
-            self.set_buffered_data((1,0), iterInfo, None)
+            self._set_buffered_data((0,1), iterInfo, None)
+            self._set_buffered_data((1,0), iterInfo, None)
             if i==0: 
-                return self.deform_from_image_pair(0, 1, iterInfo)
+                return self._deform_from_image_pair(0, 1, iterInfo)
             elif i==1:
-                return self.deform_from_image_pair(1, 0, iterInfo)
+                return self._deform_from_image_pair(1, 0, iterInfo)
             else:
                 raise ValueError('Classic Demons only supports 2 images.')
         else:
@@ -331,23 +332,23 @@ class OriginalDemonsRegistration(BaseRegistration, BaseDemonsRegistration):
 class DiffeomorphicDemonsRegistration(GDGRegistration, BaseDemonsRegistration):
     """ DiffeomorphicDemonsRegistration(*images)
     
+    Inherits from :class:`pirt.GDGRegistration`.
+    
     A variant of the Demons algorithm that is diffeomorphic. Based on the
     generice diffeomorphic groupwise registration (GDGRegistration) method .
     
-    See also OriginalDemonsRegistration.
+    See also :class:`pirt.OriginalDemonsRegistration`.
     
+    The ``speed_factor`` parameter is specific to this algorithm. The
+    ``noise_factor`` works best set at 1.0, effectively disabling
+    its use; it is made redundant by the B-spline based regularization.
+    Other important parameters are also listed below.
     
-    Parameters specific to this algorithm
-    -------------------------------------
-    Notice: the noise_factor works best set at 1.0, effectively disabling
-        its use; it is made redundant by the B-spline based regularization.
-    
+    Parameters
+    ----------
     speed_factor : scalar
         The relative force of the transform. This one of the most important
         parameters to tune. Default 3.0.
-    
-    Other important parameters
-    --------------------------
     mapping : {'forward', 'backward'}
         Whether forward or backward mapping is used. Default forward.
     final_scale : scalar

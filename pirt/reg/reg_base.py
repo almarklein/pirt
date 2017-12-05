@@ -290,7 +290,7 @@ class Visualizer(object):
 
 
 class AbstractRegistration(object):
-    """ AbstractRegistration(*images)
+    """ AbstractRegistration(*images, makeFloat=True)
     
     Base class for registration of 2 or more images. This class only provides
     a common interface for the user.
@@ -298,23 +298,24 @@ class AbstractRegistration(object):
     This base class can for example be inherited by registration classes 
     that wrap an external registration algorithm, such as Elastix.
     
-    See also the BaseRegistration class.
+    Also see :class:`pirt.BaseRegistration`.
     
-    Class hierachy
-    --------------
     Implements:
+    
       * progress, timer, and visualizer objects
       * properties to handle the mapping (forward or backward)
       * functionality to get and set parameters
       * basic functionality to get resulting deformations
       * functionality to show the result (2D only)
-      
-    Inherting methods should implement:
-      * register()
     
+    Parameters
+    ----------
+    None
     """
     
-    def __init__(self, *ims, **kwargs):
+    # Inherting methods should implement register()
+    
+    def __init__(self, *ims, makeFloat=True):
         
         # Init images
         self._ims = []
@@ -322,11 +323,6 @@ class AbstractRegistration(object):
         # Check number of images
         if len(ims) < 2: 
             raise ValueError('Need at least two images at initialisation.')
-        
-        # Check kwargs
-        makeFloat=True
-        if 'makeFloat' in kwargs and not kwargs['makeFloat']:
-            makeFloat=False
         
         # Check all images
         for im in ims:
@@ -407,7 +403,7 @@ class AbstractRegistration(object):
     @property
     def forward_mapping(self):
         """ Whether forward (True) or backward (False) 
-        mapping is to be used.
+        mapping is to be used internally.
         """
         if self.params.mapping.lower() == 'forward':
             return True
@@ -506,7 +502,9 @@ class AbstractRegistration(object):
     def get_deform(self, i=0):
         """ get_deform(i=0)
         
-        Get the DeformationField instance for image with index i.
+        Get the DeformationField instance for image with index i. If groupwise
+        registration was used, this deformation field maps image i to the mean
+        shape.
         
         """
         
@@ -518,45 +516,6 @@ class AbstractRegistration(object):
             return self._deforms[i]
         except KeyError:
             raise KeyError('The deformation for index %i' % i + 'is not available.')
-    
-    
-#     def get_final_deform(self, i=0, j=1, mapping=None):
-#         """ get_final_deform(i=0, j=1, mapping=None)
-#         
-#         Get the DeformationField instance that maps image with index i
-#         to the image with index j. The default implementation calls
-#         get_deform(i).
-#         
-#         Parameters
-#         ----------
-#         i : int
-#             The source image
-#         j : int
-#             The target image (ignored)
-#         mapping : {'forward', 'backward', Deformation instance, None}
-#             Whether the result should be a forward or backward deform.
-#             When specified, the result can be calculated faster and with less
-#             errors than for example using result.as_forward(). If a 
-#             Deformation object is given, the mapping of that deform is used.
-#         
-#         """
-#         
-#         # Handle mapping
-#         if mapping is None:
-#             mapForward = self.forward_mapping
-#         elif isinstance(mapping, str):
-#             if mapping.lower() == 'forward':  mapForward = True
-#             elif mapping.lower() == 'backward':  mapForward = False
-#             else:  raise ValueError('Invalid mapping specified.')
-#         elif isinstance(mapping, Deformation):
-#             mapForward = mapping.forward_mapping
-#         else: 
-#             raise ValueError('Invalid mapping specified.')
-#         
-#         if mapForward:
-#             return self.get_deform(i).as_forward()
-#         else:
-#             return self.get_deform(i).as_backward()
     
     def get_final_deform(self, i=0, j=1, mapping=None):
         """ get_final_deform(i=0, j=1, mapping=None)
@@ -710,9 +669,21 @@ class AbstractRegistration(object):
     def register(self, verbose=1, fig=None):
         """ register(verbose=1, fig=None)
         
-        Perform the registration. 
-        Inheriting classes should overload this method.
+        Perform the registration process. 
         
+        Parameters
+        ----------
+        verbose : int
+            Verbosity level. 0 means silent, 1 means print some, 2 means
+            print a lot.
+        fig : visvis figure or None
+            If given, will display the registration progress in the given
+            figure.
+        """
+        self._register(verbose, fig)
+    
+    def _register(self, verbose, fig):
+        """ Inheriting classes should overload this method.
         """
         raise NotImplemented()
 
@@ -721,12 +692,14 @@ class AbstractRegistration(object):
 class NullRegistration(AbstractRegistration):
     """ NullRegistration(*images)
     
+    Inherits from :class:`pirt.AbstractRegistration`.
+    
     A registration algorithm that does nothing. This can be usefull to test
     the result if no registration would be applied.
     
     Parameters
     ----------
-    This class has no parameters.
+    None
     
     """
     def _defaultParams(self):
@@ -736,7 +709,7 @@ class NullRegistration(AbstractRegistration):
         params.mapping = 'backward'
         return params
     
-    def register(self, *args, **kwargs):
+    def _register(self, *args, **kwargs):
         for i in range(len(self._ims)):
             shape = self._ims[i].shape
             fields = [np.zeros(shape, 'float32') for s in shape]
@@ -747,13 +720,15 @@ class NullRegistration(AbstractRegistration):
 class BaseRegistration(AbstractRegistration):
     """ BaseRegistration(*images)
     
-    An abstract registration class that provides some common functionality
+    Inherits from :class:`pirt.AbstractRegistration`.
+    
+    An abstract registration class that provides common functionality
     shared by almost all registration algorithms.
     
-    This class keeps an image pyramid for each image, implements methods
+    This class maintains an image pyramid for each image, implements methods
     to set the delta deform, and get the deformed image at a specified scale.
     Further, this class implements the high level aspect of the registration
-    algorithm, that iterates through scale space.
+    algorithm that iterates through scale space.
     
     Parameters
     ----------
@@ -780,20 +755,17 @@ class BaseRegistration(AbstractRegistration):
         Whether a smooth scale space should be used (default) or the scale
         is reduced with a factor of two each scale_sampling iterations.
     
-    
-    Class hierachy
-    --------------
-    Implements:
-      * register()
-      * set_delta_deform(i, deform)
-      * get_deformed_image(i)
-      * set_buffered_data(key1, key2, data)
-      * get_buffered_data(key1, key2)
-      
-    Inherting methods should implement:
-      * deform_for_image(i, iterInfo)
-    
     """
+    
+    # Implements:
+    #   * _register()
+    #   * _set_delta_deform(i, deform)
+    #   * get_deformed_image(i)
+    #   * _set_buffered_data(key1, key2, data)
+    #   * _get_buffered_data(key1, key2)
+    #   
+    # Inherting methods should implement:
+    #   * _deform_for_image(i, iterInfo)
     
     def __init__(self, *ims):
         AbstractRegistration.__init__(self, *ims)
@@ -834,8 +806,8 @@ class BaseRegistration(AbstractRegistration):
     ## Methods and props to help the algorithm
     
     
-    def set_delta_deform(self, i, deform):
-        """ set_delta_deform(i, deform)
+    def _set_delta_deform(self, i, deform):
+        """ _set_delta_deform(i, deform)
         
         Append the given delta deform for image i. It is combined with the
         current deformation for that image.
@@ -891,7 +863,8 @@ class BaseRegistration(AbstractRegistration):
         """ get_deformed_image(i, s=0)
         
         Get the image i at scale s, deformed with its current deform. 
-        Intended for the registration algorithm.
+        Mainly intended for the registration algorithms, but can be of interest
+        during development/debugging.
         
         """
         # Get image
@@ -914,19 +887,21 @@ class BaseRegistration(AbstractRegistration):
         return im
     
     
-    def set_buffered_data(self, key1, key2, data):
-        """ set_buffered_data(key1, key2, data)
+    def _set_buffered_data(self, key1, key2, data):
+        """ _set_buffered_data(key1, key2, data)
         
         Buffer the given data. key1 is where the data is stored under.
         key2 is a check. The most likely use case is using the image
         number as key1 and the scale as key2.
         
+        Intended for the registration algorithm subclasses.
+        
         """        
         self._buffer[key1] = key2, data
     
     
-    def get_buffered_data(self, key1, key2):
-        """ get_buffered_data(key1, key2)
+    def _get_buffered_data(self, key1, key2):
+        """ _get_buffered_data(key1, key2)
         
         Retrieve buffered data.
         
@@ -940,106 +915,7 @@ class BaseRegistration(AbstractRegistration):
     
     ## The actual methods
     
-    # todo: staying longer in the higher scales improves reg results according to DJ
-    def register_old(self, verbose=1, fig=None):
-        """ register(verbose=1, fig=None)
-        
-        Perform the registration process. 
-        
-        Parameters
-        ----------
-        verbose : int
-            Verbosity level. 0 means silent, 1 means print some, 2 means
-            print a lot.
-        fig : visvis figure or None
-            If given, will display the registration progress in the given
-            figure.
-        
-        """
-        
-        # For an illustration of the scale sampling, see the script
-        # _smooth_scale_sampling.py.
-        
-        # Init visualizer
-        self.visualizer.init(fig)
-        
-        # Init progress display
-        if verbose >= 1:
-            self.progress.start('%s: '% self.__class__.__name__)
-        
-        # Init interpolation order
-        self._current_interp_order = 1
-        
-        # Scale parameters
-        final_scale = float(self.params.final_scale)
-        scale_sampling = int(self.params.scale_sampling)
-        scale_levels = int(self.params.scale_levels)
-        smooth_scale = bool(self.params.smooth_scale)
-        
-        # Calculate iter factor for smooth scale space
-        iter_factor = 0.5**(1.0/scale_sampling)
-        
-        # Check
-        pixel_scales = [final_scale/s for s in self._ims[0].sampling]   
-        if min(pixel_scales) < 0.5:
-            raise ValueError('final_scale expressed in pixel units should be at least 0.5.')
-        if scale_levels < 1:
-            raise ValueError('Invalid value for scale_levels.')
-        
-        # Create pyramids, using final_scale as an offset
-        self._pyramids = [ScaleSpacePyramid(im, final_scale)
-                                for im in self._ims]
-        
-        
-        # Main loop
-        for level in reversed(range(scale_levels)):
-            
-            # Set (initial) scale for this level
-            scale = final_scale * 2**level
-            if smooth_scale:
-                scale *= 2 * iter_factor
-            
-            for iter in range(1, scale_sampling+1):
-                
-                # Skip highest scale
-                if smooth_scale and level >= scale_levels-1:
-                    continue
-                
-                # Set interpolation order higher in the final iterations
-                if level==0 and iter>0.75*scale_sampling:
-                    self._current_interp_order = 3
-                
-                # Do one iteration
-                self.register_iteration(scale)
-                
-                # Print iteration info
-                formatInfo = (level, iter, scale)
-                if verbose==1:
-                    self.progress.next('(%i-%i) scale %1.2f' % formatInfo)
-                elif verbose>1:
-                    print("Registration iter %i-%i at scale %1.2f" % formatInfo)
-                
-                # Next iteration. When using a smooth scale space
-                # the final scale is reached sooner.
-                if smooth_scale:
-                    scale = max(final_scale, scale*iter_factor)
-    
-    
-    def register(self, verbose=1, fig=None):
-        """ register(verbose=1, fig=None)
-        
-        Perform the registration process. 
-        
-        Parameters
-        ----------
-        verbose : int
-            Verbosity level. 0 means silent, 1 means print some, 2 means
-            print a lot.
-        fig : visvis figure or None
-            If given, will display the registration progress in the given
-            figure.
-        
-        """
+    def _register(self, verbose=1, fig=None):
         
         # For an illustration of the scale sampling, see the script
         # _smooth_scale_sampling.py.
@@ -1100,7 +976,7 @@ class BaseRegistration(AbstractRegistration):
                 
                 # Do one iteration
                 iterInfo = (level, iter, scale)
-                self.register_iteration(iterInfo)
+                self._register_iteration(iterInfo)
                 
                 # Print iteration info
                 if verbose==1:
@@ -1114,8 +990,8 @@ class BaseRegistration(AbstractRegistration):
                     scale = max(final_scale, scale*iter_factor)
     
     
-    def register_iteration(self, iterInfo):
-        """ register_iteration(iterInfo)
+    def _register_iteration(self, iterInfo):
+        """ _register_iteration(iterInfo)
         
         Apply one iteration of the registration algorithm at 
         the specified scale (iterInfo[2]).
@@ -1127,16 +1003,16 @@ class BaseRegistration(AbstractRegistration):
         # Calculate deformation for each image
         deforms = []
         for i in range(nims):
-            deform = self.deform_for_image(i, iterInfo)
+            deform = self._deform_for_image(i, iterInfo)
             deforms.append(deform)
         
         # Apply deformations
         for i in range(nims):
-            self.set_delta_deform(i, deforms[i])
+            self._set_delta_deform(i, deforms[i])
     
     
-    def deform_for_image(self, i, iterInfo):
-        """ deform_for_image(i, iterInfo)
+    def _deform_for_image(self, i, iterInfo):
+        """ _deform_for_image(i, iterInfo)
         
         Calculate the deform for the given image index. 
         
@@ -1146,6 +1022,8 @@ class BaseRegistration(AbstractRegistration):
 
 class GDGRegistration(BaseRegistration):
     """ GDGRegistration(*images)
+    
+    Inherits from :class:`pirt.BaseRegistration`.
     
     Generic Groupwise Diffeomorphic Registration. Abstract class that 
     provides a generic way to perform diffeomorphic groupwise registration.
@@ -1180,19 +1058,15 @@ class GDGRegistration(BaseRegistration):
         constraint by a "magic" limit. By making this limit tighter
         (relative to the scale), the deformations stay in reasonable bounds.
         This feature helps a lot for convergence. Default value is 1.
-    
-    
-    Class hierachy
-    --------------
-    Implements:
-      * regularize_diffeomorphic(scale, deform, weight=None)
-      * get_final_deform(i, j, mapping)
-      * deform_for_image(i, iterInfo)
-    
-    Inherting methods should implement:
-      * deform_for_image_pair(i, i, iterInfo)
-    
     """
+    
+    # Implements:
+    #   * _regularize_diffeomorphic(scale, deform, weight=None)
+    #   * get_final_deform(i, j, mapping)
+    #   * _deform_for_image(i, iterInfo)
+    # 
+    # Inherting methods should implement:
+    #   * _deform_for_image_pair(i, i, iterInfo)
     
     def _defaultParams(self):
         """ Overload to create all default params.
@@ -1268,8 +1142,8 @@ class GDGRegistration(BaseRegistration):
         return grid_sampling
     
     
-    def regularize_diffeomorphic(self, scale, deform, weight=None):
-        """ regularize_diffeomorphic(scale, deform, weight=None)
+    def _regularize_diffeomorphic(self, scale, deform, weight=None):
+        """ _regularize_diffeomorphic(scale, deform, weight=None)
         
         Regularize the given DeformationField in a way that makes it
         diffeomorphic. Returns the result as a DeformationGrid.
@@ -1299,8 +1173,8 @@ class GDGRegistration(BaseRegistration):
         return grid
     
     
-    def deform_for_image(self, i, iterInfo):
-        """ deform_for_image(i, iterInfo)
+    def _deform_for_image(self, i, iterInfo):
+        """ _deform_for_image(i, iterInfo)
         
         Calculate the deform for the given image index. 
         
@@ -1354,7 +1228,7 @@ class GDGRegistration(BaseRegistration):
             if i==j:
                 continue
             # Get deform
-            deform = self.deform_from_image_pair(i, j, iterInfo)
+            deform = self._deform_from_image_pair(i, j, iterInfo)
             
             # Add to total
             if deform is not None:
@@ -1383,7 +1257,7 @@ class GDGRegistration(BaseRegistration):
             return None
         
         # Return deform for image 0 only
-        return self.deform_from_image_pair(0, 1, iterInfo)
+        return self._deform_from_image_pair(0, 1, iterInfo)
     
     
     def _deform_for_image_pairwise2(self, i, iterInfo):
@@ -1397,5 +1271,5 @@ class GDGRegistration(BaseRegistration):
             return None
         
         # Return deform for image 0 only
-        return self.deform_from_image_pair(1, 0, iterInfo)
+        return self._deform_from_image_pair(1, 0, iterInfo)
 
