@@ -3,7 +3,7 @@ Minor tests for basic functionality of the registration algorithms.
 """
 
 import numpy as np
-import visvis as vv
+# import visvis as vv
 
 import pirt
 
