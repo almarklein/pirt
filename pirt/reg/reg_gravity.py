@@ -341,10 +341,11 @@ class GravityRegistration(GDGRegistration):
         Visualize the registration process.
         
         """
-        import visvis as vv
         
         if self.visualizer.fig is None:
             return
+        
+        import visvis as vv
         
         firstpass = not self.visualizer.fig.children
         
