@@ -242,8 +242,8 @@ class Visualizer(object):
         
         """
         self._f = fig
-        if fig is not None:  # noqa - so importerror is raised if visvis not available
-            import visvis as vv
+        if fig is not None:
+            import visvis as vv  # noqa - so importerror is raised if visvis not available
     
     @property
     def fig(self):
