@@ -1,7 +1,7 @@
 # flake8: noqa
 """ Pirt - Python Image Registration Toolkit """
 
-__version__ = '2.0.1'
+__version__ = '2.1.0'
 
 
 # Check compat
