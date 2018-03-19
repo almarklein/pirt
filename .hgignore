@@ -5,6 +5,7 @@ syntax: glob
 *.pyd
 *.orig
 *.c
+*_tmp.py
 build/*
 dist/*
 docs/_build/*
