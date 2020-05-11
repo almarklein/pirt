@@ -17,7 +17,7 @@ Pirt implements its own interpolation functions, which, incidentally,
 are faster than the corresponding functions in scipy and scikit-image
 (after Numba's JIT warmup).
 
-Pirt is hosted on [Bitbucket](https://bitbucket.org/almarklein/pirt)
+Pirt is hosted on [Github](https://github.com/almarklein/pirt) (previously on Bitbucket)
 and has [docs on rtd](http://pirt.readthedocs.io/).
 
 Overview
