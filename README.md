@@ -5,8 +5,8 @@ Introduction
 
 Pirt is the "Python image registration toolkit". It is a library for
 (elastic, i.e. non-regid) image registration of 2D and 3D images with
-support for groupwise registration. It has support to constrain the 
-deformations to be "diffeomorphic", i.e. without folding or shearing, and 
+support for groupwise registration. It has support to constrain the
+deformations to be "diffeomorphic", i.e. without folding or shearing, and
 thus invertable.
 
 Pirt is written in pure Python and uses Numba for speed. It depends on
@@ -17,7 +17,7 @@ Pirt implements its own interpolation functions, which, incidentally,
 are faster than the corresponding functions in scipy and scikit-image
 (after Numba's JIT warmup).
 
-Pirt is hosted on [Github](https://github.com/almarklein/pirt) (previously on Bitbucket)
+Pirt is hosted on [Github](https://github.com/almarklein/pirt)
 and has [docs on rtd](http://pirt.readthedocs.io/).
 
 Overview

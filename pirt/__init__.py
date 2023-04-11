@@ -1,7 +1,7 @@
 # flake8: noqa
 """ Pirt - Python Image Registration Toolkit """
 
-__version__ = '2.1.0'
+__version__ = '2.1.1'
 
 
 # Check compat
@@ -9,7 +9,7 @@ import sys
 if sys.version_info < (3, 4):
     raise RuntimeError('Pirt requires at least Python 3.4')
 
-# Imports 
+# Imports
 
 from ._utils import Aarray, PointSet, Parameters
 
@@ -27,7 +27,7 @@ from .interp import (get_cubic_spline_coefs, meshgrid,
 
 from .splinegrid import GridInterface, SplineGrid, GridContainer, FieldDescription, FD
 
-from .deform import (Deformation, DeformationIdentity, 
+from .deform import (Deformation, DeformationIdentity,
                      DeformationGrid, DeformationField,
                      DeformationGridForward, DeformationFieldForward,
                      DeformationGridBackward, DeformationFieldBackward)
